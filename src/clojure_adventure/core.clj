@@ -36,8 +36,10 @@
      (apply combine-layers (into [combined-layer] layers)))))
 
 (defn move-by
-  [{x1 :x y1 :y} {x2 :x y2 :y}]
-  {:x (+ x1 x2) :y (+ y1 y2)})
+  [pos {x :x y :y}]
+  (update
+   (update pos :x (partial + x))
+   :y (partial + y)))
 
 (defn vec2
   [x y]
