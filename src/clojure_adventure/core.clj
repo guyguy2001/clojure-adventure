@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [lanterna.terminal :as t]
             [lanterna.screen :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure-adventure.grid :as grid]))
 
 (def starting-map (vec (repeat 10 (vec (repeat 100 "-")))))
 (defn print-board
@@ -51,6 +52,14 @@
    :up (vec2 0 -1)
    :down (vec2 0 1)})
 
+(defn try-move-by
+  [grid entity by]
+  (let [moved (move-by entity by)]
+    (if (= (get-in grid [(:y moved) (:x moved)]) "-")
+      moved
+      entity)))
+
+
 (defn game-loop
   [screen {board :board player :player}]
   ((s/clear screen)
@@ -59,9 +68,20 @@
    (let [input (s/get-key-blocking screen)
          direction (get direction-by-input input)
          player (if (not= direction nil)
-                  (update player :pos #(move-by % direction))
+                  (update player :pos #(try-move-by board % direction))
                   player)]
      (game-loop screen {:board board :player player}))))
+
+(defn populate-trees
+  "Puts the given character on empty spaces"
+  [grid char n]
+  (if (= n 0)
+    grid
+    (let [empty-spaces (grid/get-empty-spaces grid)
+          [x y] (rand-nth empty-spaces)]
+      (populate-trees (assoc-in grid [y x] char)
+                      char
+                      (dec n)))))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -70,7 +90,7 @@
     (s/start screen)
     (s/clear screen)
     (game-loop screen
-               {:board starting-map :player {:pos {:x 50 :y 5} :symbol "@"}})
+               {:board (populate-trees starting-map "^" 10)
+                :player {:pos {:x 50 :y 5} :symbol "@"}})
     (s/stop screen)))
-
 
