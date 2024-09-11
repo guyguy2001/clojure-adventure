@@ -31,7 +31,7 @@
    (assert (vector? first-layer))
    (let [combined-layer
          (cond
-           (empty? second-layer) (combine-layers first-layer layers)
+           (empty? second-layer) (do (println first-layer "empty" second-layer) (apply combine-layers first-layer layers))
            (map? (first second-layer)) (combine-items-to-board first-layer second-layer)
            (vector? (first second-layer)) (combine-vec2-layers first-layer second-layer))]
      (apply combine-layers (into [combined-layer] layers)))))
@@ -59,38 +59,59 @@
       moved
       entity)))
 
+(def cardinal-directions (map (partial apply vec2) [[0 1] [0 -1] [1 0] [-1 0]]))
+
+(defn enemy-turn
+  [grid enemy]
+  (update enemy :pos #(try-move-by grid % (rand-nth cardinal-directions))))
 
 (defn game-loop
-  [screen {board :board player :player}]
+  [screen {board :board player :player enemies :enemies}]
   ((s/clear screen)
-   (print-board (combine-layers board [player]) screen)
+   (print-board (combine-layers board [player] (do (println enemies) enemies)) screen)
    (s/redraw screen)
    (let [input (s/get-key-blocking screen)
          direction (get direction-by-input input)
          player (if (not= direction nil)
                   (update player :pos #(try-move-by board % direction))
-                  player)]
-     (game-loop screen {:board board :player player}))))
+                  player)
+         enemies (map #(enemy-turn board %) enemies)]
+     (game-loop screen {:board board :player player :enemies enemies}))))
 
-(defn populate-trees
+(defn populate-grid-inplace
   "Puts the given character on empty spaces"
   [grid char n]
   (if (= n 0)
     grid
     (let [empty-spaces (grid/get-empty-spaces grid)
           [x y] (rand-nth empty-spaces)]
-      (populate-trees (assoc-in grid [y x] char)
-                      char
-                      (dec n)))))
+      (populate-grid-inplace (assoc-in grid [y x] char)
+                             char
+                             (dec n)))))
+
+(defn populate-grid-return
+  "Puts the given character on empty spaces"
+  ([grid char n]
+   (if (= n 0)
+     []
+     (let [empty-spaces (grid/get-empty-spaces grid)
+           [x y] (rand-nth empty-spaces)]
+       (cons {:pos (vec2 x y) :symbol char}
+             (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces
+                                   char
+                                   (dec n)))))))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [screen (s/get-screen :swing)]
+  (let [screen (s/get-screen :swing)
+        board (-> starting-map
+                  (populate-grid-inplace "^" 10))]
     (s/start screen)
     (s/clear screen)
     (game-loop screen
-               {:board (populate-trees starting-map "^" 10)
-                :player {:pos {:x 50 :y 5} :symbol "@"}})
+               {:board board
+                :player {:pos {:x 50 :y 5} :symbol "@"}
+                :enemies (populate-grid-return board "X" 5)})
     (s/stop screen)))
 
