@@ -5,8 +5,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  )
 
-(ns clojure-adventure.grid
-  (:gen-class))
+(ns clojure-adventure.grid)
 
 
 ;; (defn -cartesian-product
@@ -22,6 +21,20 @@
 (defn height
   [grid]
   (count grid))
+
+; TODO: chagne to [grid [x y] value] to be more similar to assoc-in?
+(defn assoc-grid
+  [grid x y value]
+  (if (and
+       (< y (height grid))
+       (< x (width grid)))
+    (assoc-in grid [y x] value)
+    (throw
+     (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y}))))
+
+(defn assoc-grid-vec2
+  [grid {x :x y :y} value]
+  (assoc-grid grid x y value))
 
 (defn get-empty-spaces
   [grid]

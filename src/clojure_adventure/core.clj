@@ -1,11 +1,12 @@
 (ns clojure-adventure.core
   (:gen-class)
-  (:require [lanterna.terminal :as t]
-            [lanterna.screen :as s]
+  (:require [lanterna.screen :as s]
             [clojure.string :as str]
-            [clojure-adventure.grid :as grid]))
+            [clojure-adventure.grid :as grid]
+            [clojure-adventure.population :as population]
+            [clojure-adventure.vec2 :as vec2]))
 
-(def starting-map (vec (repeat 10 (vec (repeat 100 "-")))))
+;; (def starting-map (vec (repeat 10 (vec (repeat 100 "-")))))
 (defn print-board
   [board screen]
   (dorun (map (fn [row y]
@@ -31,7 +32,7 @@
    (assert (vector? first-layer))
    (let [combined-layer
          (cond
-           (empty? second-layer) (do (println first-layer "empty" second-layer) (apply combine-layers first-layer layers))
+           (empty? second-layer) (apply combine-layers first-layer layers)
            (map? (first second-layer)) (combine-items-to-board first-layer second-layer)
            (vector? (first second-layer)) (combine-vec2-layers first-layer second-layer))]
      (apply combine-layers (into [combined-layer] layers)))))
@@ -42,15 +43,12 @@
    (update pos :x (partial + x))
    :y (partial + y)))
 
-(defn vec2
-  [x y]
-  {:x x :y y})
 
 (def direction-by-input
-  {:left (vec2 -1 0)
-   :right (vec2 1 0)
-   :up (vec2 0 -1)
-   :down (vec2 0 1)})
+  {:left (vec2/vec2 -1 0)
+   :right (vec2/vec2 1 0)
+   :up (vec2/vec2 0 -1)
+   :down (vec2/vec2 0 1)})
 
 (defn try-move-by
   [grid entity by]
@@ -59,7 +57,7 @@
       moved
       entity)))
 
-(def cardinal-directions (map (partial apply vec2) [[0 1] [0 -1] [1 0] [-1 0]]))
+(def cardinal-directions (map (partial apply vec2/vec2) [[0 1] [0 -1] [1 0] [-1 0]]))
 
 (defn enemy-turn
   [grid enemy]
@@ -68,7 +66,7 @@
 (defn game-loop
   [screen {board :board player :player enemies :enemies}]
   ((s/clear screen)
-   (print-board (combine-layers board [player] (do (println enemies) enemies)) screen)
+   (print-board (combine-layers board [player] enemies) screen)
    (s/redraw screen)
    (let [input (s/get-key-blocking screen)
          direction (get direction-by-input input)
@@ -96,7 +94,7 @@
      []
      (let [empty-spaces (grid/get-empty-spaces grid)
            [x y] (rand-nth empty-spaces)]
-       (cons {:pos (vec2 x y) :symbol char}
+       (cons {:pos (vec2/vec2 x y) :symbol char}
              (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces
                                    char
                                    (dec n)))))))
@@ -105,7 +103,8 @@
   "I don't do a whole lot ... yet."
   [& args]
   (let [screen (s/get-screen :swing)
-        board (-> starting-map
+        board (-> population/starting-map
+                  (population/populate-square "#" {:x 50 :y 10} 10)
                   (populate-grid-inplace "^" 10))]
     (s/start screen)
     (s/clear screen)
@@ -115,3 +114,22 @@
                 :enemies (populate-grid-return board "X" 5)})
     (s/stop screen)))
 
+(comment
+  ;; {:pos {:x 50 :y 5} :symbol "@"}
+  (def enemy {:pos {:x 10 :y 5} :symbol "X"})
+  (def cardinal-directions (map (partial apply vec2/vec2) [[0 1] [0 -1] [1 0] [-1 0]]))
+
+  (defn enemy-turn
+    [grid enemy]
+    (update enemy :pos #(try-move-by grid % (rand-nth cardinal-directions))))
+
+  (def starting-map population/starting-map)
+  (enemy-turn starting-map enemy)
+  (populate-grid-return starting-map "X" 5)
+  (let [board (-> starting-map
+                  (populate-grid-inplace "^" 10))]
+    (println nil
+             {:board board
+              :player {:pos {:x 50 :y 5} :symbol "@"}
+              :enemies (populate-grid-return board "X" 5)}))
+  :rcf)
