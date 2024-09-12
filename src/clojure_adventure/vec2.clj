@@ -4,6 +4,11 @@
   [x y]
   {:x x :y y})
 
+(def left (vec2 -1 0))
+(def right (vec2 1 0))
+(def up (vec2 0 -1))
+(def down (vec2 0 1))
+
 (defn -apply-items
   "Example: `(-apply-itmes + (vec2 [1 2])  vec2 ([3 4]))` => `(vec2 [4 6])`"
   [f & vecs]
