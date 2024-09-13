@@ -44,25 +44,31 @@
     (range y1 y2))))
 
 (defn draw-board
-  [board screen]
+  [screen board]
   (dorun (map (fn [row y]
                 (s/put-string screen 0 y (str/join "" row)))
               board (range))))
 
-(defn draw-inventory
-  [screen inventory])
+(def inventory {:wood 2 :iron 2})
 
-(comment
-  (def inventory {:wood 2 :iron 2})
-  (defn show-item [type amount] (format "%s: %d" (name type) amount))
-  (show-item :wood 1)
-  :rcf)
+(defn show-item [type amount] (format "%s: %d" (name type) amount))
+
+(defn draw-inventory
+  [screen inventory]
+  (doseq [[type amount] inventory]
+    (s/put-string screen
+                  (+ (left inventory-rect) (:x inventory-padding))
+                  (+ (top inventory-rect) (:y inventory-padding))
+                  (show-item type amount))))
+
 
 (defn draw-screen
   [screen board]
   (s/clear screen)
-  (draw-board board screen)
-  (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
+  (-> screen
+      (draw-board board)
+      (draw-vertical-line (right grid-rect) (top screen-rect) (bottom screen-rect))
+      (draw-inventory inventory))
   (s/redraw screen))
 
 ;; (defmacro with-screen
