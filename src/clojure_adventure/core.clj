@@ -30,16 +30,27 @@
   [grid enemy]
   (update enemy :pos #(try-move-by grid % (rand-nth vec2/cardinal-directions))))
 
+
+(defn evaluate-turn
+  [state input]
+  (let [direction (get direction-by-input input)]
+    (-> state
+        (update :player
+                (fn [player]
+                  (if (not= direction nil)
+                    (update player :pos #(try-move-by (:board state) % direction))
+                    player)))
+        (assoc :enemies
+               (map #(enemy-turn (:board state) %) (:enemies state)))
+        (assoc :interaction-focus ;focus == the thing the player is interacting with
+               nil))))
+
 (defn game-loop
-  [screen {board :board player :player enemies :enemies}]
-  ((ui/draw-screen screen {:board (grid/combine-layers board [player] enemies)})
-   (let [input (ui/get-input screen)
-         direction (get direction-by-input input)
-         player (if (not= direction nil)
-                  (update player :pos #(try-move-by board % direction))
-                  player)
-         enemies (map #(enemy-turn board %) enemies)]
-     (game-loop screen {:board board :player player :enemies enemies}))))
+  [screen state]
+  ((loop [state state]
+     (ui/draw-screen screen {:board (grid/combine-layers (:board state) [(:player state)] (:enemies state))})
+     (let [input (ui/get-input screen)]
+       (recur (evaluate-turn state input))))))
 
 (defn get-initial-board
   []
