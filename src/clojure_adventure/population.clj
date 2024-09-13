@@ -4,7 +4,7 @@
             [clojure-adventure.grid :as grid]))
 
 
-(def starting-map (vec (repeat 20 (vec (repeat 100 "-")))))
+(def starting-map (vec (repeat 30 (vec (repeat 100 "-")))))
 
 (defn populate-horizontal-line
   [grid symbol start length]
@@ -69,3 +69,4 @@
 ;;   starting-map
 ;;   (populate-square starting-map "#" {:x 50 :y 10} 10)
   :rcf)
+
