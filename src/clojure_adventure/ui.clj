@@ -65,10 +65,9 @@
 (defn draw-screen
   [screen board]
   (s/clear screen)
-  (-> screen
-      (draw-board board)
-      (draw-vertical-line (right grid-rect) (top screen-rect) (bottom screen-rect))
-      (draw-inventory inventory))
+  (draw-board screen board)
+  (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
+  (draw-inventory screen inventory)
   (s/redraw screen))
 
 ;; (defmacro with-screen
