@@ -5,7 +5,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  )
 
-(ns clojure-adventure.grid)
+(ns clojure-adventure.grid
+  (:require [clojure-adventure.vec2 :as vec2]))
 
 
 
@@ -27,12 +28,20 @@
   [grid]
   (count grid))
 
+(defn in-bounds?
+  ([grid {x :x y :y}]
+   (in-bounds? grid x y))
+  ([grid x y]
+   (and
+    (>= x 0)
+    (>= y 0)
+    (< x (width grid))
+    (< y (height grid)))))
+
 ; TODO: chagne to [grid [x y] value] to be more similar to assoc-in?
 (defn assoc-grid
   [grid x y value]
-  (if (and
-       (< y (height grid))
-       (< x (width grid)))
+  (if (in-bounds? grid x y)
     (assoc-in grid [y x] value)
     (throw
      (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y}))))
@@ -74,3 +83,27 @@
            (map? (first second-layer)) (combine-items-to-grid first-layer second-layer)
            (vector? (first second-layer)) (combine-vec2-layers first-layer second-layer))]
      (apply combine-layers (into [combined-layer] layers)))))
+
+
+(;; Neighbors? Interactions?
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ )
+
+
+(defn get-neighboars
+  [grid pos]
+  (filter (partial in-bounds? grid) (map #(vec2/add pos %) vec2/cardinal-directions)))
+
+(comment
+  (def grid [[1 2] [3 4]])
+  (in-bounds? grid 0 0)
+  (in-bounds? grid -1 0)
+  (in-bounds? grid 0 -1)
+  (in-bounds? grid 1 1)
+  (in-bounds? grid 2 1)
+  (in-bounds? grid 1 2)
+  (in-bounds? grid 2 2)
+  (get-neighboars [[1 2] [3 4]] (vec2/vec2 0 0))
+
+  
+  :rcf)

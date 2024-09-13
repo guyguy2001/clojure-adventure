@@ -20,8 +20,6 @@
       moved
       entity)))
 
-(def cardinal-directions [vec2/left vec2/right vec2/up vec2/down])
-
 (def direction-by-input
   {:left vec2/left
    :right vec2/right
@@ -30,11 +28,11 @@
 
 (defn enemy-turn
   [grid enemy]
-  (update enemy :pos #(try-move-by grid % (rand-nth cardinal-directions))))
+  (update enemy :pos #(try-move-by grid % (rand-nth vec2/cardinal-directions))))
 
 (defn game-loop
   [screen {board :board player :player enemies :enemies}]
-  ((ui/draw-screen screen (grid/combine-layers board [player] enemies))
+  ((ui/draw-screen screen {:board (grid/combine-layers board [player] enemies)})
    (let [input (ui/get-input screen)
          direction (get direction-by-input input)
          player (if (not= direction nil)
@@ -43,16 +41,36 @@
          enemies (map #(enemy-turn board %) enemies)]
      (game-loop screen {:board board :player player :enemies enemies}))))
 
+(defn get-initial-board
+  []
+  (-> population/starting-map
+      (population/populate-square "#" {:x 50 :y 10} 10)
+      (grid/assoc-grid 50 15 "-")
+      (population/populate-grid-inplace "^" 10)))
+
+(defn get-initial-state
+  []
+  {:board (get-initial-board)
+   :inventory {}})
+
+(defn get-debug-state
+  []
+  {:board (get-initial-board)
+   :inventory {:iron 2 :wood 5}})
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [board (-> population/starting-map
-                  (population/populate-square "#" {:x 50 :y 10} 10)
-                  (population/populate-grid-inplace "^" 10))]
+  (let [board (get-initial-board)]
     (ui/with-screen
       (fn [screen]
         (game-loop screen
                    {:board board
-                    :player {:pos {:x 50 :y 5} :symbol "@"}
+                    :player {:pos {:x 53 :y 15} :symbol "@"}
                     :enemies (population/populate-grid-return board "X" 5)})))))
 
+(comment
+  (-main)
+  :rcf)
+; DESIGN TODO:
+; * how should objects be represented? stored?

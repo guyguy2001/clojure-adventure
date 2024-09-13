@@ -9,6 +9,8 @@
 (def up (vec2 0 -1))
 (def down (vec2 0 1))
 
+(def cardinal-directions [left right up down])
+
 (defn -apply-items
   "Example: `(-apply-itmes + (vec2 [1 2])  vec2 ([3 4]))` => `(vec2 [4 6])`"
   [f & vecs]
