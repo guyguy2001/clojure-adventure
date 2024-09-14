@@ -16,9 +16,13 @@
   (do ; def-initial-state
     (def state (-> (core/get-initial-state)
                    (core/evaluate-turn :up)
+                   (core/evaluate-turn :left)
                    (core/evaluate-turn :left)))
     (draw-screen screen state))
   (:board state)
+  (:interaction-focus state)
+  (core/get-interaction-focus-target (:board state) (:objects state) (get-in state [:player :pos]))
+  (:interaction-focus (-> state (core/evaluate-turn :left)))
 
 
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))

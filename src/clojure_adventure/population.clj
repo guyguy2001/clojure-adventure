@@ -6,16 +6,19 @@
 
 (def starting-map (vec (repeat 30 (vec (repeat 100 "-")))))
 
+
+; populate-vertical-line is my original implementation, and horizontal-line is based on suggestions from slack.
+; It doesn't really use the vector 2 abstraction, but is cleaner and probably simpler to understand
 (defn populate-horizontal-line
-  [grid symbol start length]
-  (reduce (fn [grid pos] (grid/assoc-grid-vec2 grid pos symbol))
+  [grid symbol {:keys [x y]} length]
+  (reduce (fn [grid i] (grid/assoc-grid grid (+ x i) y symbol))
           grid
-          (map (fn [i] (vec2/add start (vec2/vec2 i 0))) (range length))))
+          (range length)))
 
 
 (defn populate-vertical-line
   [grid symbol start length]
-  (reduce (fn [grid {x :x y :y}] (assoc-in grid [y x] symbol))
+  (reduce (fn [grid pos] (grid/assoc-grid-vec2 grid pos symbol))
           grid
           (map (fn [i] (vec2/add start (vec2/vec2 0 i))) (range length))))
 
