@@ -49,28 +49,53 @@
   (first (filter (comp not nil?)
                  (get-neighboaring-objects grid objects pos))))
 
-(defn evaluate-turn
-  [_state input]
-  (let [direction (get direction-by-input input)]
-    (reduce (fn [state f] (f state))
-            _state
-            [(fn [state]
-               (update state :player
-                       (fn [player]
-                         (if (not= direction nil)
-                           (update player :pos #(try-move-by (:board state) % direction))
-                           player))))
-             (fn [state]
-               (assoc state
-                      :enemies
-                      (map #(enemy-turn (:board state) %) (:enemies state))))
-             (fn [state]
-               (assoc state
-                      :interaction-focus ;focus == the thing the player is interacting with
-                      (get-interaction-focus-target (:board state)
-                                                    (:objects state)
-                                                    (get-in state [:player :pos]))))])))
+(defn apply-to-state
+  "actions: [:player (fn[state] <new-player>)
+             :enemies (fn[state] <new-enemies>)]"
+  [state actions]
+  (reduce (fn [state [key f]] (assoc state key (f state)))
+          state
+          (partition 2 actions)))
 
+; TODO: This version probably sucks for updating 2 things at once
+; for example if teh player fights an enemy and both need updating
+; whoops
+(defn evaluate-turn
+  [state_ input]
+  (let [direction (get direction-by-input input)]
+    (apply-to-state
+     state_
+     [:player (fn [{:keys [player board]}]
+                (if (not= direction nil)
+                  (update player :pos #(try-move-by board % direction))
+                  player))
+
+      :enemies
+      (fn [{:keys [board enemies]}] (map #(enemy-turn board %) enemies))
+
+      :interaction-focus
+      (fn [{:keys [board objects player]}]
+        (get-interaction-focus-target board objects
+                                      (:pos player)))])))
+
+(comment
+  (def state (get-initial-state))
+  (def actions
+    (let [direction (get direction-by-input :right)]
+      [:player (fn [{:keys [player board]}]
+                 (if (not= direction nil)
+                   (update player :pos #(try-move-by board % direction))
+                   player))
+       :enemies (fn [{:keys [board enemies]}]
+                  (map #(enemy-turn board %) enemies))
+       :interaction-focus
+       (fn [{:keys [board objects player]}]
+         (get-interaction-focus-target board objects
+                                       (:pos player)))]))
+
+  (apply-to-state state actions)
+
+  :rcf)
 (defn game-loop
   [screen state]
   ((loop [state state]
