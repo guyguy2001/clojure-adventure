@@ -72,17 +72,25 @@
                         row1 row2)))
             layer1 layer2)))
 
+; TODO: create combine-layers-1 after creating tests for combine-layers
+(defn combine-layers-1
+  ([first-layer]
+   first-layer)
+  ([first-layer second-layer]
+   (assert (vector? first-layer))
+   (cond
+     (empty? second-layer) first-layer
+     (map? (first second-layer)) (combine-items-to-grid first-layer second-layer)
+     (vector? (first second-layer)) (combine-vec2-layers first-layer second-layer))))
+
 (defn combine-layers
   ([first-layer]
    first-layer)
   ([first-layer second-layer & layers]
    (assert (vector? first-layer))
    (let [combined-layer
-         (cond
-           (empty? second-layer) (apply combine-layers first-layer layers)
-           (map? (first second-layer)) (combine-items-to-grid first-layer second-layer)
-           (vector? (first second-layer)) (combine-vec2-layers first-layer second-layer))]
-     (apply combine-layers (into [combined-layer] layers)))))
+         (combine-layers-1 first-layer second-layer)]
+     (apply combine-layers (cons combined-layer layers)))))
 
 
 (;; Neighbors? Interactions?
@@ -105,5 +113,5 @@
   (in-bounds? grid 2 2)
   (get-neighboars [[1 2] [3 4]] (vec2/vec2 0 0))
 
-  
+
   :rcf)

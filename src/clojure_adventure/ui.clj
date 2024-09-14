@@ -1,7 +1,8 @@
 (ns clojure-adventure.ui
   (:require [lanterna.screen :as s]
             [clojure.string :as str]
-            [clojure-adventure.vec2 :as vec2]))
+            [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.grid :as grid]))
 
 ; TODO: Are these inclusive?
 (defprotocol Boundaries
@@ -56,10 +57,12 @@
     (s/put-string screen x y "|")))
 
 (defn draw-board
-  [screen board]
-  (dorun (map (fn [row y]
-                (s/put-string screen 0 y (str/join "" row)))
-              board (range))))
+  [screen state]
+  (let [board (grid/combine-layers (:board state) [(:player state)] (:enemies state) (:objects state))] ; big todo :( also do I want this to depend on grid?
+    (println "HI!")
+    (dorun (map (fn [row y]
+                  (s/put-string screen 0 y (str/join "" row)))
+                board (range)))))
 
 
 
@@ -96,7 +99,7 @@
 (defn draw-screen
   [screen state]
   (s/clear screen)
-  (draw-board screen (:board state))
+  (draw-board screen state)
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
   (draw-inventory screen inventory)
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))

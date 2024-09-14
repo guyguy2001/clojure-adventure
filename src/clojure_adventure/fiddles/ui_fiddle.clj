@@ -1,7 +1,8 @@
 (ns clojure-adventure.fiddles.clj.ui-fiddle
   {:clj-kondo/config
    '{:linters {:unused-namespace {:level :off}
-               :inline-def {:level :off}}}}
+               :inline-def {:level :off}
+               :refer-all {:level :off}}}}
   (:require [lanterna.screen :as s]
             [clojure.string :as str]
             [clojure-adventure.vec2 :as vec2]
@@ -13,11 +14,13 @@
 (comment
   (def screen (setup-screen {:font-size 8}))
   (do ; def-initial-state
-    (def objects [{:pos {:x 51 :y 13} :symbol "?"}])
-    (def board (core/get-initial-board))
-    (draw-screen screen {:board (grid/combine-layers board objects)}))
-  
-  
+    (def state (-> (core/get-initial-state)
+                   (core/evaluate-turn :up)
+                   (core/evaluate-turn :left)))
+    (draw-screen screen state))
+  (:board state)
+
+
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
 
   (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 0.5))
