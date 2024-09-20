@@ -51,7 +51,6 @@
    (if (= n 0)
      []
      (let [empty-spaces (grid/get-empty-spaces grid)
-           _ (println (count empty-spaces))
            [x y] (rand-nth empty-spaces)]
        (cons {:pos (vec2/vec2 x y) :symbol char}
              (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces

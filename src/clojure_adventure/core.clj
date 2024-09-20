@@ -49,6 +49,12 @@
   (first (filter (comp not nil?)
                  (get-neighboaring-objects grid objects pos))))
 
+; TODO: This version probably sucks for updating 2 things at once
+; for example if the player fights an enemy and both need updating
+; whoops
+; I think I wouldn't feel like I need this if I just used ->
+; with functions that receive the state, and live outside of
+; this as global functions
 (defn apply-to-state
   "actions: [:player (fn[state] <new-player>)
              :enemies (fn[state] <new-enemies>)]"
@@ -57,9 +63,6 @@
           state
           (partition 2 actions)))
 
-; TODO: This version probably sucks for updating 2 things at once
-; for example if teh player fights an enemy and both need updating
-; whoops
 (defn evaluate-turn
   [state_ input]
   (let [direction (get direction-by-input input)]
@@ -96,12 +99,15 @@
   (apply-to-state state actions)
 
   :rcf)
+
 (defn game-loop
   [screen state]
-  ((loop [state state]
-     (ui/draw-screen screen state)
-     (let [input (ui/get-input screen)]
-       (recur (evaluate-turn state input))))))
+  (loop [state state]
+    (ui/draw-screen screen state)
+    (let [input (ui/get-input screen)]
+      (if (= input :delete)
+        nil ; Exit the game
+        (recur (evaluate-turn state input))))))
 
 (defn get-initial-board
   []
@@ -118,7 +124,8 @@
      :enemies (population/populate-grid-return board "X" 5)
      :interaction-focus nil
      :inventory {}
-     :objects [{:pos {:x 51 :y 13} :symbol "?"}]}))
+     :objects [{:pos {:x 51 :y 13} :symbol "?"
+                :name "Spellbook"}]}))
 
 (comment
   (def state (get-initial-state))

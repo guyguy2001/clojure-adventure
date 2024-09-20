@@ -59,7 +59,6 @@
 (defn draw-board
   [screen state]
   (let [board (grid/combine-layers (:board state) [(:player state)] (:enemies state) (:objects state))] ; big todo :( also do I want this to depend on grid?
-    (println "HI!")
     (dorun (map (fn [row y]
                   (s/put-string screen 0 y (str/join "" row)))
                 board (range)))))
@@ -76,9 +75,19 @@
   [width fill-ratio]
   (str "Health: " (render-bar width fill-ratio)))
 
+(defn draw-interaaction-prompt
+  [screen key item-name]
+  (s/put-string screen
+                10
+                (+ 6 (bottom grid-rect))
+                (format "[%s] %s" key item-name)))
+
 (defn draw-bottom-pane
-  [screen]
-  (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 0.5)))
+  [screen state]
+  (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 0.5))
+  (when-let [item-name (:name (:interaction-focus state))]
+    (draw-interaaction-prompt screen "X" item-name)))
+
 
 
 (def inventory {:wood 2 :iron 2})
@@ -93,6 +102,8 @@
                   (+ (top inventory-rect) (:y inventory-padding) i)
                   (show-item type amount))))
 
+
+
 ; Right now this is a blob that receives all of the game's state and renders stuff.
 ; Do I want to couple the UI more with the logic? Something that will let me do
 ; a locality of behaviour between the state and the UI
@@ -103,7 +114,7 @@
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
   (draw-inventory screen inventory)
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
-  (draw-bottom-pane screen)
+  (draw-bottom-pane screen state)
   (s/redraw screen))
 
 (comment
@@ -117,9 +128,3 @@
 ;;      (s/clear ~screen-name)
 ;;      ~@body
 ;;      (s/stop ~screen-name)))
-
-
-(comment
-;;   (macroexpand-1 '(with-screen screen (println 1)))
-;;   (with-screen screen (println sc))
-  :rcf)

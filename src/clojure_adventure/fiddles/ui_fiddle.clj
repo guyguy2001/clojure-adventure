@@ -1,4 +1,4 @@
-(ns clojure-adventure.fiddles.clj.ui-fiddle
+(ns clojure-adventure.fiddles.ui-fiddle
   {:clj-kondo/config
    '{:linters {:unused-namespace {:level :off}
                :inline-def {:level :off}
@@ -12,17 +12,30 @@
 
 
 (comment
-  (def screen (setup-screen {:font-size 8}))
+  (def screen (do
+                (when-let [old-screen (var-get (resolve 'screen))]
+                  (s/stop old-screen))
+                (setup-screen {:font-size 8})))
+
   (do ; def-initial-state
     (def state (-> (core/get-initial-state)
                    (core/evaluate-turn :up)
                    (core/evaluate-turn :left)
-                   (core/evaluate-turn :left)))
+                   (core/evaluate-turn :left)
+                   (core/evaluate-turn :x)))
+    (draw-screen screen state))
+  (do
+    (def state (core/evaluate-turn state (ui/get-input screen)))
     (draw-screen screen state))
   (:board state)
-  (:interaction-focus state)
-  (core/get-interaction-focus-target (:board state) (:objects state) (get-in state [:player :pos]))
-  (:interaction-focus (-> state (core/evaluate-turn :left)))
+  (def item-name (:name (:interaction-focus state)))
+  (defn draw-interaction-prompt
+    [key item-name]
+    (s/put-string screen
+                  10
+                  (+ 6 (bottom grid-rect))
+                  (format "[%s] %s" key item-name)))
+  (s/redraw screen)
 
 
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
