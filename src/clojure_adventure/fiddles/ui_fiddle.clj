@@ -12,22 +12,49 @@
 
 
 (comment
+  ; 1. run this:
   (def screen (do
-                (when-let [old-screen (var-get (resolve 'screen))]
-                  (s/stop old-screen))
+                ; Start by cleaning the old screen
+                (let [screen-var (resolve 'screen)]
+                  (when (bound? screen-var)
+                    (s/stop (var-get screen-var))))
                 (setup-screen {:font-size 8})))
 
+  ; 2. To get the expected stack trace:
+  (try
+    (do ; def-initial-state
+      (def state (-> (core/get-initial-state)
+                     (core/evaluate-turn :up)
+                     (core/evaluate-turn :left)
+                     (core/evaluate-turn :left)))
+      (draw-screen screen state))
+    (catch Exception e
+      (println e)))
+
+  ; 3. To get the unexpected stack trace, execute then click print stacktrace: 
   (do ; def-initial-state
     (def state (-> (core/get-initial-state)
                    (core/evaluate-turn :up)
                    (core/evaluate-turn :left)
-                   (core/evaluate-turn :left)
-                   (core/evaluate-turn :x)))
+                   (core/evaluate-turn :left)))
     (draw-screen screen state))
+
+  ; 4. This gives the expected stack trace in the repl window
+  (vec2/-apply-items + nil nil)
+
+
+
+
+  ;; Unrelated code (ignore)
+
   (do
     (def state (core/evaluate-turn state (ui/get-input screen)))
     (draw-screen screen state))
-  (:board state)
+
+  (draw-screen screen (core/get-initial-state))
+  (s/stop screen)
+
+
   (def item-name (:name (:interaction-focus state)))
   (defn draw-interaction-prompt
     [key item-name]
