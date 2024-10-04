@@ -31,11 +31,25 @@
   (update enemy :pos #(try-move-by world % (rand-nth vec2/cardinal-directions))))
 
 
+(defn get-object-list
+  "Transforms {:players [a b c] :enemies [d]} to [a b c d]"
+  [objects-dict]
+  (->> objects-dict
+       (map val)
+       (apply concat)))
+
+(comment
+  (map val {1 2 :3 4})
+  (get-object-list {:players [:a :b] :enemies [:c]})
+  (concat [:a :b] [:c])
+  :rcf)
+
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
 ; both for performance (O(1) access from xy to object), and also logical abstraction
+; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
 (defn get-object-at-pos
   [objects pos]
-  (first (filter #(= pos (:pos %)) objects)))
+  (first (filter #(= pos (:pos %)) (get-object-list objects))))
 
 
 (defn get-neighboaring-objects
