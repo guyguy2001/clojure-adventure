@@ -14,9 +14,9 @@
 
 
 (defn try-move-by
-  [board entity by]
+  [world entity by]
   (let [moved (move-by entity by)]
-    (if (= (get-in (:base-grid board) [(:y moved) (:x moved)]) "-")
+    (if (= (grid/get-grid (:base-grid world) (:x moved) (:y moved)) "-")
       moved
       entity)))
 
@@ -27,8 +27,8 @@
    :down vec2/down})
 
 (defn enemy-turn
-  [board enemy]
-  (update enemy :pos #(try-move-by board % (rand-nth vec2/cardinal-directions))))
+  [world enemy]
+  (update enemy :pos #(try-move-by world % (rand-nth vec2/cardinal-directions))))
 
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
@@ -57,9 +57,9 @@
 ; this as global functions
 (defn apply-to-objects
   "actions: [:players (fn[state player] <new-player>)
-             :enemies (fn[state enemy] <new-enemiy>)]"
+             :enemies (fn[state enemy] <new-enemy>)]"
   [state actions]
-  (update-in state [:board :objects]
+  (update-in state [:world :objects]
              (fn [objects]
                (reduce (fn [objects [key f]] (assoc objects key (map (partial f state) (key objects))))
                        objects
@@ -73,14 +73,14 @@
   ; I need to see how people refactor in clojure
   (apply-to-objects
    (get-initial-state)
-   [:enemies (fn [{:keys [board]} e] (enemy-turn board e))])
-  (def actions [:enemies (fn [{:keys [board]} e] (enemy-turn board e))])
+   [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
+  (def actions [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
   (def state (get-initial-state))
-  (let [objects (get-in state [:board :objects])
+  (let [objects (get-in state [:world :objects])
         ;; [key f] actions
         key :enemies
         objects {:enemies []}
-        f (fn [{:keys [board]} e] (println e))]
+        f (fn [{:keys [world]} e] (println e))]
     (assoc objects key (map (partial f state) objects))
     (map (partial f state) objects))
   :rcf)
@@ -91,26 +91,26 @@
   (assoc map key (f map)))
 
 (defn get-player
-  [board]
-  (first (:players (:objects board))))
+  [world]
+  (first (:players (:objects world))))
 
 (defn get-new-interaction-focus
-  [{board :board}] ; param is `state`
-  (let [{:keys [base-grid objects]} board]
-    (get-interaction-focus-target base-grid objects (:pos (get-player board)))))
+  [{world :world}] ; param is `state`
+  (let [{:keys [base-grid objects]} world]
+    (get-interaction-focus-target base-grid objects (:pos (get-player world)))))
 
 (defn evaluate-turn
   [state_ input]
   (let [direction (get direction-by-input input)]
     (-> state_
         (apply-to-objects
-         [:players (fn [{:keys [board]} player]
+         [:players (fn [{:keys [world]} player]
                      (if (not= direction nil)
-                       (update player :pos #(try-move-by board % direction))
+                       (update player :pos #(try-move-by world % direction))
                        player))
 
           :enemies
-          (fn [{:keys [board]} enemy] (enemy-turn board enemy))])
+          (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
 
         (update-with-context
          :interaction-focus
@@ -120,13 +120,13 @@
   (def state (get-initial-state))
   (def direction (vec2/vec2 1 0))
   (def actions
-    [:player (fn [{:keys [board]} player]
+    [:player (fn [{:keys [world]} player]
                (if (not= direction nil)
-                 (update player :pos #(try-move-by board % direction))
+                 (update player :pos #(try-move-by world % direction))
                  player))
 
      :enemies
-     (fn [{:keys [board]} enemy] (map #(enemy-turn board enemy)))])
+     (fn [{:keys [world]} enemy] (map #(enemy-turn world enemy)))])
   (apply-to-objects state actions)
   (get-initial-state)
   :rcf)
@@ -140,7 +140,7 @@
         nil ; Exit the game
         (recur (evaluate-turn state input))))))
 
-(defn get-initial-board
+(defn get-initial-world-grid
   []
   (-> population/starting-map
       (population/populate-square "#" {:x 50 :y 10} 10)
@@ -149,7 +149,7 @@
 
 (defn get-initial-state
   []
-  (let [board (get-initial-board)] ; TODO: this let is bad, and the board doesn't know the enemies aren't empty
+  (let [grid (get-initial-world-grid)] ; TODO: this let is bad, and the board doesn't know the enemies aren't empty
     ; attempt at terminology: board = the "wolrd map", including all of the objects, grid = 2d arrady
     ; walls and stuff like that are "dumb objects", since they don't have a payload (ther _is_ a wall in a certain spot, no more data than that).
     ; players, enemis, etc are smart objects.
@@ -160,9 +160,10 @@
     ; Potential answer: entities live on the board, resources live in the state.
     ; Potential alternative - have the board contain pointers to the objects that are on it, and let them live outside of it.
     ; I'm renaming`board` to `world` for now since this is getting out of freaking hand.
-    {:board {:base-grid board
+    ; NOT to be confused with bevy's `world` - (:world state) is the container of the objects that live on the grid, some state (inrecation-focus for example) is outside of it
+    {:world {:base-grid grid
              :objects {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
-                       :enemies (population/populate-grid-return board "X" 5)
+                       :enemies (population/populate-grid-return grid "X" 5)
                        :other [{:pos {:x 51 :y 13} :symbol "?"
                                 :name "Spellbook"}]}}
      :interaction-focus nil
@@ -176,9 +177,9 @@
   objects
   (map #(= pos (:pos %)) objects)
   (get-object-at-pos (get-in state [:objects]) (vec2/vec2 51 13))
-  (get-interaction-focus-target (:board state) (:objects state) (vec2/vec2 51 12))
+  (get-interaction-focus-target (:world state) (:objects state) (vec2/vec2 51 12))
   (map (partial get-object-at-pos (:objects state))
-       (grid/get-neighboars (:board state) (vec2/vec2 51 12)))
+       (grid/get-neighboars (:world state) (vec2/vec2 51 12)))
 
   (get-object-at-pos (get-in state [:objects]) (vec2/vec2 51 13))
 
@@ -186,7 +187,12 @@
 
 (defn get-debug-state1
   []
-  {:board (get-initial-board)
+  {:world {:base-grid (get-initial-world-grid)
+           :objects {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
+                     :enemies []
+                     :other [{:pos {:x 51 :y 13} :symbol "?"
+                              :name "Spellbook"}]}}
+   :interaction-focus nil
    :inventory {:iron 2 :wood 5}})
 
 (defn -main

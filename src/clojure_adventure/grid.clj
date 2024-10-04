@@ -38,6 +38,11 @@
     (< x (width grid))
     (< y (height grid)))))
 
+(defn get-grid
+  "Line get-in for grids (abstracts away the x y order). NOTE: Can return nil."
+  [grid x y]
+  (get-in grid [y x]))
+
 ; TODO: chagne to [grid [x y] value] to be more similar to assoc-in?
 (defn assoc-grid
   [grid x y value]

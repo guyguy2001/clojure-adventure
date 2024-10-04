@@ -56,11 +56,11 @@
   (doseq [y (range y1 y2)]
     (s/put-string screen x y "|")))
 
-(defn draw-board
-  [screen board]
-  (let [objects (:objects board)]
+(defn draw-world
+  [screen world]
+  (let [objects (:objects world)]
     println objects)
-  (let [grid (apply grid/combine-layers (:base-grid board) (vals (:objects board)))] ; big todo :( also do I want this to depend on grid?
+  (let [grid (apply grid/combine-layers (:base-grid world) (vals (:objects world)))] ; big todo :( also do I want this to depend on grid?
     (dorun (map (fn [row y]
                   (s/put-string screen 0 y (str/join "" row)))
                 grid (range)))))
@@ -112,7 +112,7 @@
 (defn draw-screen
   [screen state]
   (s/clear screen)
-  (draw-board screen (:board state))
+  (draw-world screen (:world state))
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
   (draw-inventory screen inventory)
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
