@@ -96,12 +96,7 @@
 
 (defn combine-layers
   [& args]
-  (println args)
   (apply combine-layers-r args))
-
-(comment
-  layers
-  :rcf)
 
 
 (;; Neighbors? Interactions?
