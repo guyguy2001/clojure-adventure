@@ -68,7 +68,8 @@
    This is a temporary solution until I refactor color support into
    the grid itself or something similar."
   {"@" {:fg :green}
-   "X" {:fg :red}})
+   "X" {:fg :red}
+   "C" {:fg :magenta}})
 
 (defn draw-world
   [screen world]

@@ -176,10 +176,13 @@
     ; I'm renaming`board` to `world` for now since this is getting out of freaking hand.
     ; NOT to be confused with bevy's `world` - (:world state) is the container of the objects that live on the grid, some state (inrecation-focus for example) is outside of it
     {:world {:base-grid grid
-             :objects {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
-                       :enemies (population/populate-grid-return grid "X" 5)
-                       :other [{:pos {:x 51 :y 13} :symbol "?"
-                                :name "Spellbook"}]}}
+             :objects
+             {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
+              :enemies (population/populate-grid-return grid "X" 5)
+              :other (concat
+                      [{:pos {:x 51 :y 13} :symbol "?"
+                        :name "Spellbook"}]
+                      (population/populate-grid-return grid "C" 10 "Copper Ore"))}}
      :interaction-focus nil
      :inventory {}}))
 

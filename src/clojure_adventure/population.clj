@@ -48,11 +48,13 @@
 (defn populate-grid-return
   "Puts the given character on empty spaces"
   ([grid char n]
+   (populate-grid-return grid char n nil))
+  ([grid char n name]
    (if (= n 0)
      []
      (let [empty-spaces (grid/get-empty-spaces grid)
            [x y] (rand-nth empty-spaces)]
-       (cons {:pos (vec2/vec2 x y) :symbol char}
+       (cons {:pos (vec2/vec2 x y) :symbol char :name name}
              (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces
                                    char
                                    (dec n)))))))
