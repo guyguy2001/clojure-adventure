@@ -1,5 +1,6 @@
 (ns clojure-adventure.ui
   (:require [lanterna.screen :as s]
+            [lanterna.constants]
             [clojure.string :as str]
             [clojure-adventure.vec2 :as vec2]
             [clojure-adventure.grid :as grid]))
@@ -61,12 +62,20 @@
   [seq]
   (map-indexed (fn [i item] [i item]) seq))
 
+(def color-map
+  "character in the world map -> formatting settings
+   (the extra parameter to s/put-string)
+   This is a temporary solution until I refactor color support into
+   the grid itself or something similar."
+  {"@" {:fg :green}
+   "X" {:fg :red}})
+
 (defn draw-world
   [screen world]
   (let [grid (apply grid/combine-layers (:base-grid world) (vals (:objects world)))] ; big todo :( also do I want this to depend on grid?
     (doseq [[y row] (enumerate grid)
             [x cell] (enumerate row)]
-      (s/put-string screen x y cell))))
+      (s/put-string screen x y cell (get color-map cell)))))
 
 (defn render-bar
   [width fill-ratio]
