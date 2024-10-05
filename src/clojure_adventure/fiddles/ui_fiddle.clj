@@ -27,14 +27,6 @@
                    (core/evaluate-turn :left)))
     (draw-screen screen state))
 
-  ; 4. This gives the expected stack trace in the repl window
-  (vec2/-apply-items + nil nil)
-
-
-
-
-  ;; Unrelated code (ignore)
-
   (do
     (def state (core/evaluate-turn state (ui/get-input screen)))
     (draw-screen screen state))
