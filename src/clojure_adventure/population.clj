@@ -57,7 +57,8 @@
        (cons {:pos (vec2/vec2 x y) :symbol char :name name}
              (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces
                                    char
-                                   (dec n)))))))
+                                   (dec n)
+                                   name))))))
 (comment
 ;;   (populate-horizontal-line [["-"]] "#" {:x 0 :y 0} 1)
   (assoc [] 0 :hi)
