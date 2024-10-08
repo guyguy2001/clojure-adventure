@@ -125,7 +125,7 @@
   (s/clear screen)
   (draw-world screen (:world state))
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
-  (draw-inventory screen inventory)
+  (draw-inventory screen (:inventory state))
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
   (draw-bottom-pane screen state)
   (s/redraw screen))

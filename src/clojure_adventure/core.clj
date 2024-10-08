@@ -26,6 +26,9 @@
    :up vec2/up
    :down vec2/down})
 
+(def action-by-input
+  {:x :interact})
+
 (defn enemy-turn
   [world enemy]
   (update enemy :pos #(try-move-by world % (rand-nth vec2/cardinal-directions))))
@@ -113,9 +116,19 @@
   (let [{:keys [base-grid objects]} world]
     (get-interaction-focus-target base-grid objects (:pos (get-player world)))))
 
+(defn handle-mining
+  [state action]
+  (if (= action :interact)
+    (let [object (:interaction-focus state)]
+      (if (= (:symbol object) "C") ; Big todo
+        (update-in state [:inventory :copper] inc)
+        state))
+    state))
+
 (defn evaluate-turn
   [state_ input]
-  (let [direction (get direction-by-input input)]
+  (let [direction (get direction-by-input input)
+        action (get action-by-input input)]
     (-> state_
         (apply-to-objects
          [:players (fn [{:keys [world]} player]
@@ -128,7 +141,10 @@
 
         (update-with-context
          :interaction-focus
-         get-new-interaction-focus))))
+         get-new-interaction-focus)
+
+        (handle-mining
+         action))))
 
 (comment
   (def state (get-initial-state))
@@ -184,7 +200,7 @@
                         :name "Spellbook"}]
                       (population/populate-grid-return grid "C" 10 "Copper Ore"))}}
      :interaction-focus nil
-     :inventory {}}))
+     :inventory {:iron 1 :copper 3}}))
 
 (comment
   (def state (get-initial-state))
@@ -194,7 +210,8 @@
   objects
   (map #(= pos (:pos %)) objects)
   (get-object-at-pos (get-in state [:objects]) (vec2/vec2 51 13))
-  (get-interaction-focus-target (:world state) (:objects state) (vec2/vec2 51 12))
+  (get-interaction-focus-target (:base-grid (:world state)) (:objects (:world state)) (vec2/vec2 51 12))
+  (get-in state [:world :objects])
   (map (partial get-object-at-pos (:objects state))
        (grid/get-neighboars (:world state) (vec2/vec2 51 12)))
 
