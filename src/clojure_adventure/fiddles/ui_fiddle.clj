@@ -12,7 +12,6 @@
 
 
 (comment
-  ; 1. run this:
   (def screen (do
                 ; Start by cleaning the old screen
                 (let [screen-var (resolve 'screen)]

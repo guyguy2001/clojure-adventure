@@ -3,8 +3,15 @@
   (:require [clojure-adventure.grid :as grid]
             [clojure-adventure.population :as population]
             [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.ui :as ui]))
+            [clojure-adventure.ui :as ui]
+            #_[clojure.tools.nrepl.server
+               :refer [start-server stop-server]]))
+(require '[nrepl.server :refer [start-server stop-server]])
 
+(defn dbg
+  [val]
+  (println val)
+  val)
 
 (defn move-by
   [pos {x :x y :y}]
@@ -27,7 +34,7 @@
    :down vec2/down})
 
 (def action-by-input
-  {:x :interact})
+  {\x :interact})
 
 (defn enemy-turn
   [world enemy]
@@ -78,7 +85,7 @@
   [state actions]
   (update-in state [:world :objects]
              (fn [objects]
-               (reduce (fn [objects [key f]] (assoc objects key (map (partial f state) (key objects))))
+               (reduce (fn [objects [key f]] (assoc objects key (mapv (partial f state) (key objects))))
                        objects
                        (partition 2 actions)))))
 
@@ -162,13 +169,15 @@
   :rcf)
 
 (defn game-loop
-  [screen state]
-  (loop [state state]
-    (ui/draw-screen screen state)
+  [screen *state]
+  (loop []
+    (ui/draw-screen screen @*state)
     (let [input (ui/get-input screen)]
       (if (= input :delete)
         nil ; Exit the game
-        (recur (evaluate-turn state input))))))
+        (do
+          (reset! *state (evaluate-turn @*state input))
+          (recur))))))
 
 (defn get-initial-world-grid
   []
@@ -229,16 +238,33 @@
    :interaction-focus nil
    :inventory {:iron 2 :wood 5}})
 
+(def *state (atom (get-initial-state)))
+(defn nrepl-handler []
+  (require 'cider.nrepl)
+  (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
+
+;; (defmacro with-server
+;;   [& exprs]
+;;   `(let [server# (start-server :port 40001)]
+;;      ~@exprs
+;;      (stop-server server#)))
+
+(defonce server (start-server :port 7888 :handler (nrepl-handler)))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& _args]
 
   (ui/with-screen
     (fn [screen]
-      (game-loop screen (get-initial-state)))))
+      (game-loop screen *state)))
+  (stop-server server))
 
 (comment
   (-main)
+  (get-in @*state [:world :objects :players 0])
+  (keys @*state)
+  (reset! *state (get-initial-state))
   :rcf)
 ; DESIGN TODO:
 ; * how should objects be represented? stored?
