@@ -2,10 +2,9 @@
   (:gen-class)
   (:require [clojure-adventure.grid :as grid]
             [clojure-adventure.population :as population]
-            [clojure-adventure.vec2 :as vec2]
             [clojure-adventure.ui :as ui]
-            #_[clojure.tools.nrepl.server
-               :refer [start-server stop-server]]))
+            [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.world :as world]))
 (require '[nrepl.server :refer [start-server stop-server]])
 
 (defn dbg
@@ -41,37 +40,32 @@
   (update enemy :pos #(try-move-by world % (rand-nth vec2/cardinal-directions))))
 
 
-(defn get-object-list
-  "Transforms {:players [a b c] :enemies [d]} to [a b c d]"
-  [objects-dict]
-  (->> objects-dict
-       (map val)
-       (apply concat)))
+(defn get-neighboaring-objects
+  [state pos]
+  (map (partial world/get-object-at-pos state)
+       (grid/get-neighboars (get-in state [:world :base-grid]) pos)))
 
 (comment
-  (map val {1 2 :3 4})
-  (get-object-list {:players [:a :b] :enemies [:c]})
-  (concat [:a :b] [:c])
+  (let [state (get-initial-state)]
+    [(get-neighboaring-objects state (vec2/vec2 52 15))])
   :rcf)
-
-; TODO: I need to create an abstraction of the grid and the objects on it (layers).
-; both for performance (O(1) access from xy to object), and also logical abstraction
-; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
-(defn get-object-at-pos
-  [objects pos]
-  (first (filter #(= pos (:pos %)) (get-object-list objects))))
-
-
-(defn get-neighboaring-objects
-  [grid objects pos] ; todo: is grid neccessary?
-  (map (partial get-object-at-pos objects)
-       (grid/get-neighboars grid pos)))
 
 (defn get-interaction-focus-target
   ;todo: name
-  [grid objects pos]
-  (first (filter (comp not nil?)
-                 (get-neighboaring-objects grid objects pos))))
+  [state pos]
+  (first ; This first is to take the "key" of [[:players 0] { object data ... }]
+   (first (filter (comp not nil?)
+                  (get-neighboaring-objects state pos)))))
+
+
+(comment
+  (get-neighboaring-objects (get-initial-state) {:x 53 :y 15})
+  (get-interaction-focus-target
+   (get-initial-state) {:x 51, :y 14})
+  (world/get-object-list (get-initial-state))
+  (:pos (get-player @*state))
+  (:name (world/get-object @*state (:interaction-focus @*state)))
+  :rcf)
 
 ; TODO: This version probably sucks for updating 2 things at once
 ; for example if the player fights an enemy and both need updating
@@ -88,6 +82,10 @@
                (reduce (fn [objects [key f]] (assoc objects key (mapv (partial f state) (key objects))))
                        objects
                        (partition 2 actions)))))
+
+(comment
+  (get-in (get-initial-state) [:world :objects])
+  :rcf)
 
 (comment
   ; TODO:
@@ -115,20 +113,23 @@
   (assoc map key (f map)))
 
 (defn get-player
-  [world]
-  (first (:players (:objects world))))
+  [state]
+  (world/get-object state [:players 0]))
 
 (defn get-new-interaction-focus
-  [{world :world}] ; param is `state`
-  (let [{:keys [base-grid objects]} world]
-    (get-interaction-focus-target base-grid objects (:pos (get-player world)))))
+  [state]
+  (get-interaction-focus-target state (:pos (get-player state))))
 
 (defn handle-mining
   [state action]
   (if (= action :interact)
-    (let [object (:interaction-focus state)]
+    (let [selection-path (:interaction-focus state)
+          full-path (concat [:world :objects] selection-path)
+          object (get-in state full-path)]
       (if (= (:symbol object) "C") ; Big todo
-        (update-in state [:inventory :copper] inc)
+        (-> state
+            (update-in [:inventory :copper] inc)
+            (update-in full-path (fn [object] (update object :durability dec))))
         state))
     state))
 
@@ -136,6 +137,8 @@
   [state_ input]
   (let [direction (get direction-by-input input)
         action (get action-by-input input)]
+    ; TODO: Add an assert of something for invariants, like [:objects :enemies] being a vec and not a list.
+    ; Or maybe abstract it completely so this part of the code can't fuck it up?
     (-> state_
         (apply-to-objects
          [:players (fn [{:keys [world]} player]
@@ -203,11 +206,11 @@
     {:world {:base-grid grid
              :objects
              {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
-              :enemies (population/populate-grid-return grid "X" 5)
-              :other (concat
-                      [{:pos {:x 51 :y 13} :symbol "?"
-                        :name "Spellbook"}]
-                      (population/populate-grid-return grid "C" 10 "Copper Ore"))}}
+              :enemies (vec (population/populate-grid-return grid "X" 5))
+              :other (vec (concat
+                           [{:pos {:x 51 :y 13} :symbol "?"
+                             :name "Spellbook"}]
+                           (population/populate-grid-return-2 grid {:symbol "C" :name "Copper Ore" :durability 5} 10)))}}
      :interaction-focus nil
      :inventory {:iron 1 :copper 3}}))
 
@@ -218,13 +221,13 @@
   (def pos (vec2/vec2 51 13))
   objects
   (map #(= pos (:pos %)) objects)
-  (get-object-at-pos (get-in state [:objects]) (vec2/vec2 51 13))
-  (get-interaction-focus-target (:base-grid (:world state)) (:objects (:world state)) (vec2/vec2 51 12))
+  (world/get-object-at-pos state (vec2/vec2 51 13))
+  (get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
-  (map (partial get-object-at-pos (:objects state))
+  (map (partial world/get-object-at-pos (:objects state))
        (grid/get-neighboars (:world state) (vec2/vec2 51 12)))
 
-  (get-object-at-pos (get-in state [:objects]) (vec2/vec2 51 13))
+  (world/get-object-at-pos state (vec2/vec2 51 13))
 
   :rcf)
 
@@ -265,6 +268,8 @@
   (get-in @*state [:world :objects :players 0])
   (keys @*state)
   (reset! *state (get-initial-state))
+  (get-new-interaction-focus @*state)
+  (:pos (get-player @*state))
   :rcf)
 ; DESIGN TODO:
 ; * how should objects be represented? stored?

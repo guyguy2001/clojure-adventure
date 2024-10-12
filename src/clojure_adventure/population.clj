@@ -59,6 +59,18 @@
                                    char
                                    (dec n)
                                    name))))))
+
+(defn populate-grid-return-2
+  "Puts the given pre-made object on empty spaces"
+  ([grid object n]
+   (if (= n 0)
+     []
+     (let [empty-spaces (grid/get-empty-spaces grid)
+           [x y] (rand-nth empty-spaces)]
+       (cons (assoc object :pos (vec2/vec2 x y))
+             (populate-grid-return-2 (assoc-in grid [y x] (:symbol object)) ; only modified for get-empty-spaces
+                                     object
+                                     (dec n)))))))
 (comment
 ;;   (populate-horizontal-line [["-"]] "#" {:x 0 :y 0} 1)
   (assoc [] 0 :hi)
