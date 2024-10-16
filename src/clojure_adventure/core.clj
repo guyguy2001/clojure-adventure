@@ -120,18 +120,36 @@
   [state]
   (get-interaction-focus-target state (:pos (get-player state))))
 
+; TODO: get despawning really working so that I have a limit on the copper
+; Thought: I want to have the copper number flash green for a second after picking something up.
+; The problem is that if I implement that with a thread, it would need to access the state, and will be blocked by the mutex.
+; Actually, is that true? The game is computationally instant, only the input takes time.
+
+; TODO: If my current focus is a copper ore, and an eenmy walks over, don't focus the enemy
 (defn handle-mining
   [state action]
   (if (= action :interact)
-    (let [selection-path (:interaction-focus state)
-          full-path (concat [:world :objects] selection-path)
-          object (get-in state full-path)]
+    (let [target-path (:interaction-focus state)
+          object (world/get-object state target-path)]
       (if (= (:symbol object) "C") ; Big todo
         (-> state
             (update-in [:inventory :copper] inc)
-            (update-in full-path (fn [object] (update object :durability dec))))
+            (world/update-object
+             target-path
+             (fn [ore] (let [durability (dec (:durability ore))
+                             ore (assoc ore :durability durability)
+                             ore (if (<= durability 0)
+                                   (assoc ore :dead true)
+                                   ore)]
+                         ore))))
         state))
     state))
+
+(comment
+  (let [ore (world/get-object @*state (:interaction-focus @*state))]
+    (:dead ore))
+  #(if (= 1 2) 3 %)
+  :rcf)
 
 (defn evaluate-turn
   [state_ input]

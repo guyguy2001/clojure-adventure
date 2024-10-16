@@ -24,8 +24,6 @@
   [state identifier f & args]
   (apply update-in state (-get-absolute-object-path identifier) f args))
 
-; TODO: This change breaks the ui module; I think the only solution is to abstract accessing objects
-;  away under world/get-object or something like that
 (defn get-object-list
   "Transforms {:players [a b] :enemies [d]} to ([[:players 0] a] [[:players 1] b] [[:enemies 0] d])
    [[:enemies 0] d] is basically a `[deep-key val]` map entry"

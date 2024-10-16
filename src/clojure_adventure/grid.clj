@@ -67,7 +67,10 @@
 
 (defn combine-items-to-grid
   [grid items]
-  (reduce (fn [grid {{x :x y :y} :pos s :symbol}] (assoc-in grid [y x] s))
+  (reduce (fn [grid {{x :x y :y} :pos s :symbol dead :dead}]
+            (if (not dead) ; TODO: This if is just a workaround until I get despawning working
+              (assoc-in grid [y x] s)
+              grid))
           grid items))
 
 (defn combine-vec2-layers
