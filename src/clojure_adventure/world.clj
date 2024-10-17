@@ -24,17 +24,30 @@
   [state identifier f & args]
   (apply update-in state (-get-absolute-object-path identifier) f args))
 
+(defn get-paths-of-type
+  [state type] ; TODO: arg ordering
+  (let [objects (get-in state [:world :objects type])
+        paths (mapv (fn [i _obj] [type i]) (range) objects)]
+    paths))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (def _state (core/get-initial-state))
+  (get-paths-of-type _state :players) ; [[:players 0]]
+  :rcf)
+
 (defn get-object-list
   "Transforms {:players [a b] :enemies [d]} to ([[:players 0] a] [[:players 1] b] [[:enemies 0] d])
    [[:enemies 0] d] is basically a `[deep-key val]` map entry"
   [state]
   (->> (get-in state [:world :objects])
-       (map (fn [[key values]]
-              (mapv (fn [v i] (vector [key i] v)) values (range))))
-       (apply concat)))
+       (keys)
+       (map #(get-paths-of-type state %))
+       (apply concat)
+       (map (fn [path] [path (get-object state path)]))))
 
 (comment
-  (get-object-list {:players [:a :b] :enemies [:c]})
+  (get-object-list {:world {:objects {:players [:a :b] :enemies [:c]}}})
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).

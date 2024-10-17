@@ -73,18 +73,29 @@
 ; I think I wouldn't feel like I need this if I just used ->
 ; with functions that receive the state, and live outside of
 ; this as global functions
+; TODO I need to figure out how to base this on world/ abstractions
 (defn apply-to-objects
   "actions: [:players (fn[state player] <new-player>)
              :enemies (fn[state enemy] <new-enemy>)]"
   [state actions]
-  (update-in state [:world :objects]
-             (fn [objects]
-               (reduce (fn [objects [key f]] (assoc objects key (mapv (partial f state) (key objects))))
-                       objects
-                       (partition 2 actions)))))
+  (reduce (fn [state [type f]]
+            (let  [paths (world/get-paths-of-type state type)]
+              (reduce (fn [state path]
+                        (world/update-object state path
+                                             (fn [obj] (f state obj))))
+                      state paths)))
+          state
+          (partition 2 actions)))
 
 (comment
-  (get-in (get-initial-state) [:world :objects])
+  (apply-to-objects @*state
+                    [:players (fn [{:keys [world]} player]
+                                (if (not= :right nil)
+                                  (update player :pos #(try-move-by world % (vec2/vec2 1 2)))
+                                  player))
+
+                     :enemies
+                     (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
   :rcf)
 
 (comment
@@ -270,12 +281,12 @@
 ;;      ~@exprs
 ;;      (stop-server server#)))
 
-(defonce server (start-server :port 7888 :handler (nrepl-handler)))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& _args]
-
+  #_{:clj-kondo/ignore [:inline-def]}
+  (defonce server (start-server :port 7888 :handler (nrepl-handler)))
   (ui/with-screen
     (fn [screen]
       (game-loop screen *state)))
