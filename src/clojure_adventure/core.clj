@@ -96,26 +96,9 @@
 
                      :enemies
                      (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
-  :rcf)
-
-(comment
-  ; TODO:
-  ; make sure this function works
-  ; I just fucked :interaction-focus
-  ; I am sad now
-  ; I need to see how people refactor in clojure
   (apply-to-objects
    (get-initial-state)
    [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
-  (def actions [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
-  (def state (get-initial-state))
-  (let [objects (get-in state [:world :objects])
-        ;; [key f] actions
-        key :enemies
-        objects {:enemies []}
-        f (fn [{:keys [world]} e] (println e))]
-    (assoc objects key (map (partial f state) objects))
-    (map (partial f state) objects))
   :rcf)
 
 (defn update-with-context
@@ -254,23 +237,14 @@
   (get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
   (map (partial world/get-object-at-pos (:objects state))
-       (grid/get-neighboars (:world state) (vec2/vec2 51 12)))
+       (grid/get-neighboars (get-in state [:world :base-grid]) (vec2/vec2 51 12)))
 
   (world/get-object-at-pos state (vec2/vec2 51 13))
 
   :rcf)
 
-(defn get-debug-state1
-  []
-  {:world {:base-grid (get-initial-world-grid)
-           :objects {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
-                     :enemies []
-                     :other [{:pos {:x 51 :y 13} :symbol "?"
-                              :name "Spellbook"}]}}
-   :interaction-focus nil
-   :inventory {:iron 2 :wood 5}})
-
 (def *state (atom (get-initial-state)))
+
 (defn nrepl-handler []
   (require 'cider.nrepl)
   (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
@@ -300,8 +274,5 @@
   (get-new-interaction-focus @*state)
   (:pos (get-player @*state))
   :rcf)
-; DESIGN TODO:
-; * how should objects be represented? stored?
-
 
 ; I think that a lot of the issues I encountered during this refactor are caused by the fact that I accessed data directly instead of putting it behind abstractions - for example, by using get-in to get the data from the grid, instead of a grid/world abstraction, that would help me notice that I'm accessing the wrong thing, or would make it so I don't have the "wrong thing" to access in the first place
