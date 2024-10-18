@@ -20,7 +20,7 @@
                 (setup-screen {:font-size 8})))
 
   (do ; def-initial-state
-    (def state (-> (core/get-initial-state)
+    (def state (-> core/initial-state
                    (core/evaluate-turn :up)
                    (core/evaluate-turn :left)
                    (core/evaluate-turn :left)))
@@ -30,7 +30,7 @@
     (def state (core/evaluate-turn state (ui/get-input screen)))
     (draw-screen screen state))
 
-  (draw-screen screen (core/get-initial-state))
+  (draw-screen screen core/initial-state)
   (s/stop screen)
 
 

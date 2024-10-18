@@ -46,7 +46,7 @@
        (grid/get-neighboars (get-in state [:world :base-grid]) pos)))
 
 (comment
-  (let [state (get-initial-state)]
+  (let [state initial-state]
     [(get-neighboaring-objects state (vec2/vec2 52 15))])
   :rcf)
 
@@ -59,10 +59,10 @@
 
 
 (comment
-  (get-neighboaring-objects (get-initial-state) {:x 53 :y 15})
+  (get-neighboaring-objects initial-state {:x 53 :y 15})
   (get-interaction-focus-target
-   (get-initial-state) {:x 51, :y 14})
-  (world/get-object-list (get-initial-state))
+   initial-state {:x 51, :y 14})
+  (world/get-object-list initial-state)
   (:pos (get-player @*state))
   (:name (world/get-object @*state (:interaction-focus @*state)))
   :rcf)
@@ -97,7 +97,7 @@
                      :enemies
                      (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
   (apply-to-objects
-   (get-initial-state)
+   initial-state
    [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
   :rcf)
 
@@ -169,7 +169,7 @@
          action))))
 
 (comment
-  (def state (get-initial-state))
+  (def state initial-state)
   (def direction (vec2/vec2 1 0))
   (def actions
     [:player (fn [{:keys [world]} player]
@@ -180,7 +180,7 @@
      :enemies
      (fn [{:keys [world]} enemy] (map #(enemy-turn world enemy)))])
   (apply-to-objects state actions)
-  (get-initial-state)
+  initial-state
   :rcf)
 
 (defn game-loop
@@ -201,33 +201,25 @@
       (grid/assoc-grid 50 15 "-")
       (population/populate-grid-inplace "^" 10)))
 
-(defn get-initial-state
-  []
-  (let [grid (get-initial-world-grid)] ; TODO: this let is bad, and the board doesn't know the enemies aren't empty
-    ; attempt at terminology: board = the "wolrd map", including all of the objects, grid = 2d arrady
-    ; walls and stuff like that are "dumb objects", since they don't have a payload (ther _is_ a wall in a certain spot, no more data than that).
-    ; players, enemis, etc are smart objects.
-    ; Question: the player lives in the board map because it is something that appears on the map.
-    ; The inventory doesn't live there because it doesn't appear on the map.
-    ; What gives?
-    ; Potential answer: the player is an entity that needs to execute logic each turn, the board isn't.
-    ; Potential answer: entities live on the board, resources live in the state.
-    ; Potential alternative - have the board contain pointers to the objects that are on it, and let them live outside of it.
-    ; I'm renaming`board` to `world` for now since this is getting out of freaking hand.
-    ; NOT to be confused with bevy's `world` - (:world state) is the container of the objects that live on the grid, some state (inrecation-focus for example) is outside of it
-    {:world {:base-grid grid
-             :objects
-             {:players [{:pos {:x 53 :y 15} :symbol "@"}] ; it's a singleton, but I want everything to be vecs I think.
-              :enemies (vec (population/populate-grid-return grid "X" 5))
-              :other (vec (concat
-                           [{:pos {:x 51 :y 13} :symbol "?"
-                             :name "Spellbook"}]
-                           (population/populate-grid-return-2 grid {:symbol "C" :name "Copper Ore" :durability 5} 10)))}}
-     :interaction-focus nil
-     :inventory {:iron 1 :copper 3}}))
+; TODO: This still accesses :world :base-grid
+(def initial-state
+  (as-> {:world (world/new-world (get-initial-world-grid))
+         :interaction-focus nil
+         :inventory {:iron 1 :copper 3}}
+        state
+    (world/spawn-objects state :players [{:pos {:x 53 :y 15} :symbol "@"}])
+    (world/spawn-objects state :enemies (population/populate-grid-return
+                                         (get-in state [:world :base-grid]) "X" 5))
+    (world/spawn-objects
+     state :other  (concat
+                    [{:pos {:x 51 :y 13} :symbol "?"
+                      :name "Spellbook"}]
+                    (population/populate-grid-return-2
+                     (get-in state [:world :base-grid])
+                     {:symbol "C" :name "Copper Ore" :durability 5} 10)))))
 
 (comment
-  (def state (get-initial-state))
+  (def state initial-state)
   state
   (def objects (get-in state [:objects]))
   (def pos (vec2/vec2 51 13))
@@ -243,7 +235,7 @@
 
   :rcf)
 
-(def *state (atom (get-initial-state)))
+(def *state (atom initial-state))
 
 (defn nrepl-handler []
   (require 'cider.nrepl)
@@ -270,7 +262,8 @@
   (-main)
   (get-in @*state [:world :objects :players 0])
   (keys @*state)
-  (reset! *state (get-initial-state))
+  (reset! *state initial-state)
+  (reset! *state initial-state)
   (get-new-interaction-focus @*state)
   (:pos (get-player @*state))
   :rcf)

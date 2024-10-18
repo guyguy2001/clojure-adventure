@@ -1,6 +1,12 @@
 (ns clojure-adventure.world
   (:require [clojure-adventure.vec2 :as vec2]))
 
+
+(defn new-world
+  [base-grid]
+  {:base-grid base-grid
+   :objects {}})
+
 ; Todo: currently everything takes `state`, and that's gonna bite me in the ass if I have...
 ; not multiple levels, but rather multiple worlds - so I think I'm fine?
 
@@ -15,7 +21,7 @@
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (def _state (core/get-initial-state))
+  (def _state core/initial-state)
   (get-object _state [:players 0])
   (get-object _state [:enemies 0])
   :rcf)
@@ -32,8 +38,20 @@
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (def _state (core/get-initial-state))
+  (def _state core/initial-state)
   (get-paths-of-type _state :players) ; [[:players 0]]
+  :rcf)
+
+(defn spawn-objects
+  [state type objects]
+  (-> state
+      (update-in [:world :objects type]
+                 #(-> %
+                      (concat objects)
+                      vec))))
+
+(comment
+  (spawn-objects core/initial-state :players ["p1" "p2"])
   :rcf)
 
 (defn get-object-list
@@ -59,5 +77,5 @@
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (get-object-at-pos (core/get-initial-state) (vec2/vec2 53 15))
+  (get-object-at-pos core/initial-state (vec2/vec2 53 15))
   :rcf)

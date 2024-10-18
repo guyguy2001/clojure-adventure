@@ -3,7 +3,6 @@
             [clojure-adventure.population :as population]
             [clojure-adventure.vec2 :as vec2]
             [clojure-adventure.world :refer :all]
-            [clojure.data :as data]
             [clojure.test :refer :all]))
 
 (defn get-initial-world-grid
