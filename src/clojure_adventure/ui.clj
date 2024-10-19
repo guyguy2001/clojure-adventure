@@ -73,8 +73,8 @@
    "C" {:fg :magenta}})
 
 (defn draw-world
-  [screen world]
-  (let [grid (apply grid/combine-layers (:base-grid world) (vals (:objects world)))] ; big todo :( also do I want this to depend on grid?
+  [screen state]
+  (let [grid (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list state)))]
     (doseq [[y row] (enumerate grid)
             [x cell] (enumerate row)]
       (s/put-string screen x y cell (get color-map cell)))))
@@ -124,7 +124,7 @@
 (defn draw-screen
   [screen state]
   (s/clear screen)
-  (draw-world screen (:world state))
+  (draw-world screen state)
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
   (draw-inventory screen (:inventory state))
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))

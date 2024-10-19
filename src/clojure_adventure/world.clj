@@ -1,5 +1,6 @@
 (ns clojure-adventure.world
-  (:require [clojure-adventure.vec2 :as vec2]))
+  (:require [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.world-impl.entities-map :as entities-map]))
 
 
 (defn new-world
@@ -12,12 +13,15 @@
 
 (defn -get-absolute-object-path
   "Returns the path you're supposed to use when accessing the state"
-  [relative-path]
-  (concat [:world :objects] relative-path))
+  [[type index]]
+  [:world :objects type :data index])
+  ; TODO - this doesn't use the entities_map abstractions at all.
+  ; Maybe I should also provide an abstraction for the entire :objects dict?
+  ; Maybe it should be in place of the current abstraction?
 
 (defn get-object
   [state identifier]
-  (get-in state (-get-absolute-object-path identifier)))
+  (get-in state (-get-absolute-object-path identifier))) ; TODO
 
 (comment
   (require '[clojure-adventure.core :as core])
@@ -28,11 +32,11 @@
 
 (defn update-object
   [state identifier f & args]
-  (apply update-in state (-get-absolute-object-path identifier) f args))
+  (apply update-in state (-get-absolute-object-path identifier) f args)) ; TODO
 
 (defn get-paths-of-type
   [state type] ; TODO: arg ordering
-  (let [objects (get-in state [:world :objects type])
+  (let [objects (get-in state [:world :objects type :data]) ; TODO
         paths (mapv (fn [i _obj] [type i]) (range) objects)]
     paths))
 
@@ -46,9 +50,11 @@
   [state type objects]
   (-> state
       (update-in [:world :objects type]
-                 #(-> %
-                      (concat objects)
-                      vec))))
+                 #(as-> % ents
+                    (if (nil? ents)
+                      entities-map/-empty-map
+                      ents)
+                    (reduce entities-map/insert ents objects)))))
 
 (comment
   (spawn-objects core/initial-state :players ["p1" "p2"])
@@ -62,10 +68,10 @@
        (keys)
        (map #(get-paths-of-type state %))
        (apply concat)
-       (map (fn [path] [path (get-object state path)]))))
+       (map (fn [path] [path (get-object state path)])))) ; This didn't require changing - yay!
 
 (comment
-  (get-object-list {:world {:objects {:players [:a :b] :enemies [:c]}}})
+  (get-object-list {:world {:objects {:players {:data [:a :b]} :enemies {:data [:c]}}}})
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
