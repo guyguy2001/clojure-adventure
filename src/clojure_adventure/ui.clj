@@ -106,17 +106,32 @@
 
 (def inventory {:wood 2 :iron 2})
 
-(defn show-item [type amount] (format "%s: %d" (name type) amount))
+(defn show-item [type amount]
+  (format "%s: %d" (name type) amount))
 
 (defn draw-inventory
-  [screen inventory]
+  [screen inventory inventory-notifications]
   (doseq [[[type amount] i] (map vector inventory (range (count inventory)))]
-    (s/put-string screen
-                  (+ (left inventory-rect) (:x inventory-padding))
-                  (+ (top inventory-rect) (:y inventory-padding) i)
-                  (show-item type amount))))
+    (let [notification (get inventory-notifications type)
+          color (if (nil? notification) :white :green)]
+      (def foo [type amount])
+      (s/put-string screen
+                    (+ (left inventory-rect) (:x inventory-padding))
+                    (+ (top inventory-rect) (:y inventory-padding) i)
+                    (show-item type amount)
+                    {:fg color}))))
 
 
+(comment
+  (require '[clojure-adventure.core :as core])
+  (def new-state (core/evaluate-turn @core/*state \x))
+  (draw-screen @core/*screen new-state)
+  foo
+  (get-in new-state [:notifications :inventory])
+  (let [notification (get (get-in new-state [:notifications :inventory]) :copper)
+        color (if (nil? notification) :white :green)]
+    color)
+  :rcf)
 
 ; Right now this is a blob that receives all of the game's state and renders stuff.
 ; Do I want to couple the UI more with the logic? Something that will let me do
@@ -126,10 +141,11 @@
   (s/clear screen)
   (draw-world screen state)
   (draw-vertical-line screen (right grid-rect) (top screen-rect) (bottom screen-rect))
-  (draw-inventory screen (:inventory state))
+  (draw-inventory screen (:inventory state) (get-in state [:notifications :inventory]))
   (draw-horizontal-line screen (bottom grid-rect) 0 (right grid-rect))
   (draw-bottom-pane screen state)
   (s/redraw screen))
+
 
 (comment
 

@@ -1,6 +1,7 @@
 (ns clojure-adventure.core
   (:gen-class)
   (:require [clojure-adventure.grid :as grid]
+            [clojure-adventure.notifications :as notifications]
             [clojure-adventure.population :as population]
             [clojure-adventure.ui :as ui]
             [clojure-adventure.vec2 :as vec2]
@@ -128,6 +129,7 @@
       (if (= (:symbol object) "C") ; Big todo
         (-> state
             (update-in [:inventory :copper] inc)
+            (assoc-in [:notifications :inventory :copper] :resource-added)
             (world/update-object
              target-path
              (fn [ore] (let [durability (dec (:durability ore))
@@ -164,6 +166,7 @@
     ; TODO: Add an assert of something for invariants, like [:objects :enemies] being a vec and not a list.
     ; Or maybe abstract it completely so this part of the code can't fuck it up?
     (-> state_
+        (update :notifications notifications/clear-notifications)
         (apply-to-objects
          [:players (fn [{:keys [world]} player]
                      (if (not= direction nil)
@@ -217,7 +220,8 @@
 (def initial-state
   (as-> {:world (world/new-world (get-initial-world-grid))
          :interaction-focus nil
-         :inventory {:iron 1 :copper 3}}
+         :inventory {:iron 1 :copper 3}
+         :notifications (notifications/new-queue)}
         state
     (world/spawn-objects state :players [{:pos {:x 53 :y 15} :symbol "@"}])
     (world/spawn-objects state :enemies (population/populate-grid-return

@@ -1,4 +1,6 @@
 {
   // "calva.autoConnectRepl": true,
   "terminal.integrated.defaultProfile.windows": "Git Bash"
+  // "calva.autoStartRepl": true,
+  // "calva.autoConnectRepl": true
 }
