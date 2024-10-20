@@ -106,3 +106,9 @@
   (require '[clojure-adventure.core :as core])
   (get-object-at-pos core/initial-state (vec2/vec2 53 15))
   :rcf)
+
+
+
+(defn get-player
+  [state]
+  (get-object state [:players 0]))

@@ -1,6 +1,8 @@
 (ns clojure-adventure.core
   (:gen-class)
-  (:require [clojure-adventure.grid :as grid]
+  (:require [clojure-adventure.actions :as actions]
+            [clojure-adventure.combat :as combat]
+            [clojure-adventure.grid :as grid]
             [clojure-adventure.notifications :as notifications]
             [clojure-adventure.population :as population]
             [clojure-adventure.ui :as ui]
@@ -22,7 +24,8 @@
 
 (defn try-move-by
   [world entity by]
-  (let [moved (move-by entity by)]
+  (let [entity (assoc entity :facing-direction by)
+        moved (move-by entity by)]
     (if (= (grid/get-grid (:base-grid world) (:x moved) (:y moved)) "-")
       moved
       entity)))
@@ -34,7 +37,8 @@
    :down vec2/down})
 
 (def action-by-input
-  {\x :interact})
+  {\x :interact
+   \f :fireball})
 
 (defn enemy-turn
   [world enemy]
@@ -64,56 +68,14 @@
   (get-interaction-focus-target
    initial-state {:x 51, :y 14})
   (world/get-object-list initial-state)
-  (:pos (get-player @*state))
+  (:pos (world/get-player @*state))
   (:name (world/get-object @*state (:interaction-focus @*state)))
   :rcf)
 
-; TODO: This version probably sucks for updating 2 things at once
-; for example if the player fights an enemy and both need updating
-; whoops
-; I think I wouldn't feel like I need this if I just used ->
-; with functions that receive the state, and live outside of
-; this as global functions
-; TODO I need to figure out how to base this on world/ abstractions
-(defn apply-to-objects
-  "actions: [:players (fn[state player] <new-player>)
-             :enemies (fn[state enemy] <new-enemy>)]"
-  [state actions]
-  (reduce (fn [state [type f]]
-            (let  [paths (world/get-paths-of-type state type)]
-              (reduce (fn [state path]
-                        (world/update-object state path
-                                             (fn [obj] (f state obj))))
-                      state paths)))
-          state
-          (partition 2 actions)))
-
-(comment
-  (apply-to-objects @*state
-                    [:players (fn [{:keys [world]} player]
-                                (if (not= :right nil)
-                                  (update player :pos #(try-move-by world % (vec2/vec2 1 2)))
-                                  player))
-
-                     :enemies
-                     (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
-  (apply-to-objects
-   initial-state
-   [:enemies (fn [{:keys [world]} e] (enemy-turn world e))])
-  :rcf)
-
-(defn update-with-context
-  "Like update, but the callback receives the entire map, not just the original value"
-  [map key f]
-  (assoc map key (f map)))
-
-(defn get-player
-  [state]
-  (world/get-object state [:players 0]))
 
 (defn get-new-interaction-focus
   [state]
-  (get-interaction-focus-target state (:pos (get-player state))))
+  (get-interaction-focus-target state (:pos (world/get-player state))))
 
 ; TODO: get despawning really working so that I have a limit on the copper
 ; Thought: I want to have the copper number flash green for a second after picking something up.
@@ -167,7 +129,7 @@
     ; Or maybe abstract it completely so this part of the code can't fuck it up?
     (-> state_
         (update :notifications notifications/clear-notifications)
-        (apply-to-objects
+        (actions/apply-to-objects
          [:players (fn [{:keys [world]} player]
                      (if (not= direction nil)
                        (update player :pos #(try-move-by world % direction))
@@ -176,12 +138,14 @@
           :enemies
           (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
 
-        (update-with-context
+        (actions/update-with-context
          :interaction-focus
          get-new-interaction-focus)
 
         (handle-mining
-         action))))
+         action)
+
+        (combat/handle-combat action))))
 
 (comment
   (def state initial-state)
@@ -194,19 +158,25 @@
 
      :enemies
      (fn [{:keys [world]} enemy] (map #(enemy-turn world enemy)))])
-  (apply-to-objects state actions)
+  (actions/apply-to-objects state actions)
   initial-state
   :rcf)
 
 (defn game-loop
   [*screen *state]
+  (ui/draw-screen @*screen @*state)
   (loop []
-    (ui/draw-screen @*screen @*state)
+
     (let [input (ui/get-input @*screen)]
       (if (= input :delete)
         nil ; Exit the game
         (do
-          (reset! *state (evaluate-turn @*state input))
+          (try
+            (reset! *state (evaluate-turn @*state input))
+            (ui/draw-screen @*screen @*state)
+            (catch Exception e
+              (binding [*out* *err*]
+                (println "Encountered exception while running the turn:" e))))
           (recur))))))
 
 (defn get-initial-world-grid
@@ -223,7 +193,9 @@
          :inventory {:iron 1 :copper 3}
          :notifications (notifications/new-queue)}
         state
-    (world/spawn-objects state :players [{:pos {:x 53 :y 15} :symbol "@"}])
+    (world/spawn-objects state :players [{:pos {:x 53 :y 15}
+                                          :facing-direction (vec2/vec2 1 0)
+                                          :symbol "@"}])
     (world/spawn-objects state :enemies (population/populate-grid-return
                                          (get-in state [:world :base-grid]) "X" 5))
     (world/spawn-objects
@@ -283,7 +255,9 @@
   (reset! *state initial-state)
   (reset! *state initial-state)
   (get-new-interaction-focus @*state)
-  (:pos (get-player @*state))
+  (:pos (world/get-player @*state))
+  (combat/handle-combat @*state :fireball) 
+  (world/get-object @*state [:fireball 0])
   :rcf)
 
 ; I think that a lot of the issues I encountered during this refactor are caused by the fact that I accessed data directly instead of putting it behind abstractions - for example, by using get-in to get the data from the grid, instead of a grid/world abstraction, that would help me notice that I'm accessing the wrong thing, or would make it so I don't have the "wrong thing" to access in the first place
