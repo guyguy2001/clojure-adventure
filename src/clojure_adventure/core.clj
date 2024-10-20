@@ -133,7 +133,7 @@
              (fn [ore] (let [durability (dec (:durability ore))
                              ore (assoc ore :durability durability)
                              ore (if (<= durability 0)
-                                   (assoc ore :dead true)
+                                   nil
                                    ore)]
                          ore))))
         state))
@@ -143,6 +143,18 @@
   (let [ore (world/get-object @*state (:interaction-focus @*state))]
     (:dead ore))
   #(if (= 1 2) 3 %)
+  (def new-state (-> @*state
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)
+                     (handle-mining :interact)))
+  (ui/draw-screen @*screen new-state)
+  (get-in new-state [:world :objects :other])
+  (map second (world/get-object-list new-state))
   :rcf)
 
 (defn evaluate-turn
@@ -184,10 +196,10 @@
   :rcf)
 
 (defn game-loop
-  [screen *state]
+  [*screen *state]
   (loop []
-    (ui/draw-screen screen @*state)
-    (let [input (ui/get-input screen)]
+    (ui/draw-screen @*screen @*state)
+    (let [input (ui/get-input @*screen)]
       (if (= input :delete)
         nil ; Exit the game
         (do
@@ -236,6 +248,7 @@
   :rcf)
 
 (def *state (atom initial-state))
+(def *screen (atom nil))
 
 (defn nrepl-handler []
   (require 'cider.nrepl)
@@ -255,12 +268,13 @@
   (defonce server (start-server :port 7888 :handler (nrepl-handler)))
   (ui/with-screen
     (fn [screen]
-      (game-loop screen *state)))
+      (reset! *screen screen)
+      (game-loop *screen *state)))
   (stop-server server))
 
 (comment
   (-main)
-  (get-in @*state [:world :objects :players 0])
+  (get-in @*state [:world :objects :players :data 0])
   (keys @*state)
   (reset! *state initial-state)
   (reset! *state initial-state)

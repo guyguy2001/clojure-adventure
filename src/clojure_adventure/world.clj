@@ -30,15 +30,11 @@
   (get-object _state [:enemies 0])
   :rcf)
 
-(defn update-object
-  [state identifier f & args]
-  (apply update-in state (-get-absolute-object-path identifier) f args)) ; TODO
-
 (defn get-paths-of-type
   [state type] ; TODO: arg ordering
-  (let [objects (get-in state [:world :objects type :data]) ; TODO
-        paths (mapv (fn [i _obj] [type i]) (range) objects)]
-    paths))
+  (let [map (get-in state [:world :objects type])
+        keys (entities-map/entries-keys map)] ; TODO
+    (mapv (fn [k] [type k]) keys))) ; TODO - entities map abstractions
 
 (comment
   (require '[clojure-adventure.core :as core])
@@ -58,6 +54,31 @@
 
 (comment
   (spawn-objects core/initial-state :players ["p1" "p2"])
+  :rcf)
+
+(defn despawn
+  [state [type key]]
+  (update-in state [:world :objects type]
+             #(do
+                (assert (entities-map/contains-entity % key))
+                (entities-map/remove-entity % key))))
+
+(defn update-object
+  [state identifier f & args]
+  (as-> state s
+    (apply update-in s (-get-absolute-object-path identifier) f args)
+    (if (nil? (get-in s (-get-absolute-object-path identifier)))
+      (despawn s identifier)
+      s)))
+
+(comment
+  (map #(as-> @core/*state foo
+          (despawn foo [:other %])
+          (get-object-list foo)
+          (count foo))
+       (range 10))
+  (get-paths-of-type core/new-state :other)
+  (get-object-list @core/*state)
   :rcf)
 
 (defn get-object-list
