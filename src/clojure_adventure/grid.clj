@@ -71,12 +71,8 @@
 
 (defn combine-items-to-grid
   [grid items]
-  (reduce (fn [grid {{x :x y :y} :pos s :symbol dead :dead}]
-            (when (or (nil? x) (nil? y))
-              (println items s dead))
-            (if (not dead) ; TODO: This if is just a workaround until I get despawning working
-              (assoc-in grid [y x] s)
-              grid))
+  (reduce (fn [grid {{x :x y :y} :pos s :symbol}]
+            (assoc-in grid [y x] s))
           grid items))
 
 (defn combine-vec2-layers
@@ -113,7 +109,7 @@
  )
 
 
-(defn get-neighboars
+(defn get-neighboaring-cells
   [grid pos]
   (filter (partial in-bounds? grid) (map #(vec2/add pos %) vec2/cardinal-directions)))
 
@@ -126,7 +122,7 @@
   (in-bounds? grid 2 1)
   (in-bounds? grid 1 2)
   (in-bounds? grid 2 2)
-  (get-neighboars [[1 2] [3 4]] (vec2/vec2 0 0))
+  (get-neighboaring-cells [[1 2] [3 4]] (vec2/vec2 0 0))
 
 
   :rcf)
@@ -139,4 +135,9 @@
  * Remove grid2d layers - the inputs are only 1d lists of objects.
  * The result is a 2d grid of vecs of items on that square - maybe not a vec at the start, but it will be a vec in the future.
  * I can easily query for object at pos, and normal objects behave just like #
- * Objects will have :collision false if they are ghosts, and another property which I forgot"
+ * Objects will have :collision false if they are ghosts, and another property which I forgot
+ 
+ Open questions:
+ * Do I update the pos->entity representation whenever I move an object? Or only at the end of turns?
+   * Do I give up on that idea for the sake of simplicity and being able to just change :pos?
+      * I do need to pass the world already for bounds checking, so I guess this isn't that bad"

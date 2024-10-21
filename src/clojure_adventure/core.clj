@@ -35,7 +35,7 @@
 (defn get-neighboaring-objects
   [state pos]
   (map (partial world/get-object-at-pos state)
-       (grid/get-neighboars (get-in state [:world :base-grid]) pos)))
+       (grid/get-neighboaring-cells (get-in state [:world :base-grid]) pos)))
 
 (comment
   (let [state initial-state]
@@ -205,7 +205,7 @@
   (get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
   (map (partial world/get-object-at-pos (:objects state))
-       (grid/get-neighboars (get-in state [:world :base-grid]) (vec2/vec2 51 12)))
+       (grid/get-neighboaring-cells (get-in state [:world :base-grid]) (vec2/vec2 51 12)))
 
   (world/get-object-at-pos state (vec2/vec2 51 13))
 
