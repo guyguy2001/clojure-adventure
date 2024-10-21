@@ -13,7 +13,7 @@
   [state caster]
   (world/spawn-objects state :fireball [{:pos (:pos caster)
                                          :facing-direction (:facing-direction caster)
-                                         :symbol "∘︎"}]))
+                                         :symbol "•"}]))
 
 
 (defn handle-attacking

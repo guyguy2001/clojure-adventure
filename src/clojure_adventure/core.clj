@@ -170,7 +170,7 @@
   []
   (-> population/starting-map
       (population/populate-square "#" {:x 50 :y 10} 10)
-      (grid/assoc-grid 50 15 "-")
+      (grid/assoc-grid 50 15 grid/empty-cell)
       (population/populate-grid-inplace "^" 10)))
 
 ; TODO: This still accesses :world :base-grid
@@ -194,6 +194,7 @@
                      {:symbol "C" :name "Copper Ore" :durability 5} 10)))))
 
 (comment
+  (reset! *state initial-state)
   (def state initial-state)
   state
   (def objects (get-in state [:objects]))
@@ -239,7 +240,6 @@
   (-main)
   (get-in @*state [:world :objects :players :data 0])
   (keys @*state)
-  (reset! *state initial-state)
   (reset! *state initial-state)
   (get-new-interaction-focus @*state)
   (:pos (world/get-player @*state))

@@ -57,10 +57,12 @@
   [grid {x :x y :y} value]
   (assoc-grid grid x y value))
 
+(def empty-cell ".") ; TODO: Move this to population.clj, make empty cells be represented as nil or smth
+
 (defn get-empty-spaces
   [grid]
   (let [positions (for [x (range (width grid)) y (range (height grid))] [x y])]
-    (vec (filter (fn [[x y]] (= (get-in grid [y x]) "-")) positions))))
+    (vec (filter (fn [[x y]] (= (get-in grid [y x]) empty-cell)) positions))))
 
 
 (;; Layers

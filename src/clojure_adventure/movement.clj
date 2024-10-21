@@ -6,6 +6,6 @@
   [world entity by]
   (let [entity (assoc entity :facing-direction by)
         moved (update entity :pos vec2/add by)]
-    (if (= (grid/get-grid (:base-grid world) (:pos moved)) "-")
+    (if (= (grid/get-grid (:base-grid world) (:pos moved)) grid/empty-cell)
       moved
       entity)))

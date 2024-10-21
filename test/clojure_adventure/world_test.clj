@@ -9,7 +9,7 @@
   []
   (-> population/starting-map
       (population/populate-square "#" {:x 50 :y 10} 10)
-      (grid/assoc-grid 50 15 "-")
+      (grid/assoc-grid 50 15 grid/empty-cell)
       ;(population/populate-grid-inplace "^" 10) ; Removed because of randomness
       ))
 

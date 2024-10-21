@@ -4,7 +4,7 @@
             [clojure-adventure.grid :as grid]))
 
 
-(def starting-map (vec (repeat 30 (vec (repeat 100 "-")))))
+(def starting-map (vec (repeat 30 (vec (repeat 100 grid/empty-cell)))))
 
 
 ; populate-vertical-line is my original implementation, and horizontal-line is based on suggestions from slack.
@@ -72,18 +72,18 @@
                                      object
                                      (dec n)))))))
 (comment
-;;   (populate-horizontal-line [["-"]] "#" {:x 0 :y 0} 1)
+;;   (populate-horizontal-line [[grid/empty-cell]] "#" {:x 0 :y 0} 1)
   (assoc [] 0 :hi)
   (assoc [] 1 :hi)
   (assoc nil :foo "bar")
   (assoc-in [] [0 0] :foo)
-  (def grid [["-"]])
+  (def grid [[grid/empty-cell]])
   (def symbol "#")
   (def top-left (vec2/vec2 0 0))
   (def size 1)
-  (populate-square [["-"]] "#" {:x 1 :y 1} 1)
-  (populate-square [["-"]] "#" {:x 0 :y 0} 1)
-  (populate-square [["-"]] "#" {:x 1 :y 1} 1)
+  (populate-square [[grid/empty-cell]] "#" {:x 1 :y 1} 1)
+  (populate-square [[grid/empty-cell]] "#" {:x 0 :y 0} 1)
+  (populate-square [[grid/empty-cell]] "#" {:x 1 :y 1} 1)
 ;;   starting-map
 ;;   (populate-square starting-map "#" {:x 50 :y 10} 10)
   :rcf)
