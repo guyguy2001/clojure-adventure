@@ -1,7 +1,7 @@
 (ns clojure-adventure.combat
-  (:require [clojure-adventure.world :as world]
-            [clojure-adventure.actions :as actions]
-            [clojure-adventure.vec2 :as vec2]))
+  (:require [clojure-adventure.actions :as actions]
+            [clojure-adventure.movement :as movement]
+            [clojure-adventure.world :as world]))
 
 "Ideas:
  * When I attack, I shoot a fireball that moves over tiles
@@ -23,8 +23,8 @@
     state))
 
 (defn move-forward
-  [_state entity]
-  (update entity :pos vec2/add (:facing-direction entity)))
+  [state entity]
+  (movement/try-move-by (:world state) entity (:facing-direction entity)))
 
 (defn handle-projectiles
   [state]
@@ -36,5 +36,11 @@
   (-> state
       (handle-attacking action)
       (handle-projectiles)))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (handle-attacking @core/*state :fireball)
+  (world/get-player @core/*state)
+  :rcf)
 
 

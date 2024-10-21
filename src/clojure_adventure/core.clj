@@ -3,6 +3,7 @@
   (:require [clojure-adventure.actions :as actions]
             [clojure-adventure.combat :as combat]
             [clojure-adventure.grid :as grid]
+            [clojure-adventure.movement :as movement]
             [clojure-adventure.notifications :as notifications]
             [clojure-adventure.population :as population]
             [clojure-adventure.ui :as ui]
@@ -15,20 +16,6 @@
   (println val)
   val)
 
-(defn move-by
-  [pos {x :x y :y}]
-  (-> pos
-      (update :x (partial + x))
-      (update :y (partial + y))))
-
-
-(defn try-move-by
-  [world entity by]
-  (let [entity (assoc entity :facing-direction by)
-        moved (move-by entity by)]
-    (if (= (grid/get-grid (:base-grid world) (:x moved) (:y moved)) "-")
-      moved
-      entity)))
 
 (def direction-by-input
   {:left vec2/left
@@ -42,7 +29,7 @@
 
 (defn enemy-turn
   [world enemy]
-  (update enemy :pos #(try-move-by world % (rand-nth vec2/cardinal-directions))))
+  (movement/try-move-by world enemy (rand-nth vec2/cardinal-directions)))
 
 
 (defn get-neighboaring-objects
@@ -132,7 +119,7 @@
         (actions/apply-to-objects
          [:players (fn [{:keys [world]} player]
                      (if (not= direction nil)
-                       (update player :pos #(try-move-by world % direction))
+                       (movement/try-move-by world player direction)
                        player))
 
           :enemies
@@ -153,7 +140,7 @@
   (def actions
     [:player (fn [{:keys [world]} player]
                (if (not= direction nil)
-                 (update player :pos #(try-move-by world % direction))
+                 (movement/try-move-by world player direction)
                  player))
 
      :enemies
@@ -256,8 +243,9 @@
   (reset! *state initial-state)
   (get-new-interaction-focus @*state)
   (:pos (world/get-player @*state))
-  (combat/handle-combat @*state :fireball) 
+  (combat/handle-combat @*state :fireball)
   (world/get-object @*state [:fireball 0])
+  (world/get-entries-of-type @*state :fireball)
   :rcf)
 
 ; I think that a lot of the issues I encountered during this refactor are caused by the fact that I accessed data directly instead of putting it behind abstractions - for example, by using get-in to get the data from the grid, instead of a grid/world abstraction, that would help me notice that I'm accessing the wrong thing, or would make it so I don't have the "wrong thing" to access in the first place

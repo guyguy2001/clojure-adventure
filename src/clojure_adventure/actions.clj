@@ -31,11 +31,12 @@
 
 (comment
   (require '[clojure-adventure.core :as core]
-           '[clojure-adventure.vec2 :as vec2])
+           '[clojure-adventure.vec2 :as vec2]
+           '[clojure-adventure.movement :as movement])
   (apply-to-objects @core/*state
                     [:players (fn [{:keys [world]} player]
                                 (if (not= :right nil)
-                                  (update player :pos #(core/try-move-by world % (vec2/vec2 1 2)))
+                                  #(movement/try-move-by world player (vec2/vec2 1 2))
                                   player))
 
                      :enemies

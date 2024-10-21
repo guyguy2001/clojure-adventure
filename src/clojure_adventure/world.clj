@@ -42,6 +42,11 @@
   (get-paths-of-type _state :players) ; [[:players 0]]
   :rcf)
 
+(defn get-entries-of-type
+  [state type]
+  (let [paths (get-paths-of-type state type)]
+    (mapv (fn [path] [path (get-object state path)]) paths)))
+
 (defn spawn-objects
   [state type objects]
   (-> state
