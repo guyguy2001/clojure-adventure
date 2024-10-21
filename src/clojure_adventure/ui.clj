@@ -1,7 +1,6 @@
 (ns clojure-adventure.ui
   (:require [lanterna.screen :as s]
             [lanterna.constants]
-            [clojure.string :as str]
             [clojure-adventure.vec2 :as vec2]
             [clojure-adventure.grid :as grid]
             [clojure-adventure.world :as world]))
@@ -114,7 +113,6 @@
   (doseq [[[type amount] i] (map vector inventory (range (count inventory)))]
     (let [notification (get inventory-notifications type)
           color (if (nil? notification) :white :green)]
-      (def foo [type amount])
       (s/put-string screen
                     (+ (left inventory-rect) (:x inventory-padding))
                     (+ (top inventory-rect) (:y inventory-padding) i)
@@ -126,7 +124,6 @@
   (require '[clojure-adventure.core :as core])
   (def new-state (core/evaluate-turn @core/*state \x))
   (draw-screen @core/*screen new-state)
-  foo
   (get-in new-state [:notifications :inventory])
   (let [notification (get (get-in new-state [:notifications :inventory]) :copper)
         color (if (nil? notification) :white :green)]

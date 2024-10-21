@@ -69,7 +69,7 @@
 ; The problem is that if I implement that with a thread, it would need to access the state, and will be blocked by the mutex.
 ; Actually, is that true? The game is computationally instant, only the input takes time.
 
-; TODO: If my current focus is a copper ore, and an eenmy walks over, don't focus the enemy
+; TODO: If my current focus is a copper ore, and an enemy walks over, don't focus the enemy
 (defn handle-mining
   [state action]
   (if (= action :interact)
