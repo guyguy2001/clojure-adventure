@@ -130,3 +130,13 @@
 
 
   :rcf)
+
+"Grid rewrite thoughts:
+ * There's no reason to embed stuff directly into the ascii (like how I did with #), it's kinda silly
+   Also the whole concept of layers which are just 2d arrays are kinda silly
+ 
+ Concerete plans:
+ * Remove grid2d layers - the inputs are only 1d lists of objects.
+ * The result is a 2d grid of vecs of items on that square - maybe not a vec at the start, but it will be a vec in the future.
+ * I can easily query for object at pos, and normal objects behave just like #
+ * Objects will have :collision false if they are ghosts, and another property which I forgot"
