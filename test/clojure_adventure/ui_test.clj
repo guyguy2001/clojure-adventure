@@ -20,4 +20,4 @@
     (with-redefs [s/put-string (create-put-string-mock
                                 [[:screen :_ :_ (show-item :wood 1)]
                                  [:screen :_ :_ (show-item :iron 2)]])]
-      (draw-inventory :screen {:wood 1 :iron 2}))))
+      (draw-inventory :screen {:wood 1 :iron 2} {}))))
