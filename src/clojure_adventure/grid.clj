@@ -140,4 +140,6 @@
  Open questions:
  * Do I update the pos->entity representation whenever I move an object? Or only at the end of turns?
    * Do I give up on that idea for the sake of simplicity and being able to just change :pos?
-      * I do need to pass the world already for bounds checking, so I guess this isn't that bad"
+      * I do need to pass the world already for bounds checking, so I guess this isn't that bad
+ * Semi-related but very important - I'm passing state everywhere, and I now finally see that it makes testing / playing with stuff more difficult.
+   How do I stop?"
