@@ -1,6 +1,7 @@
 (ns clojure-adventure.world
   (:require [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.world-impl.entities-map :as entities-map]))
+            [clojure-adventure.world-impl.entities-map :as entities-map]
+            [clojure-adventure.grid :as grid]))
 
 
 (defn new-world
@@ -19,6 +20,7 @@
   ; Maybe I should also provide an abstraction for the entire :objects dict?
   ; Maybe it should be in place of the current abstraction?
 
+; TODO: Do I want this to return nil if the identifier is nil? I think so, due to clojure^TM
 (defn get-object
   [state identifier]
   (get-in state (-get-absolute-object-path identifier))) ; TODO
@@ -117,3 +119,24 @@
 (defn get-player
   [state]
   (get-object state [:players 0]))
+
+
+(defn -char-of-first
+  [cell-items world]
+  ; TODO: get-object expects state not wrold
+  (:symbol (get-object world (first cell-items))))
+
+(defn render-grid
+  [grid world background-char]
+  (reduce (fn [grid [pos cell]]
+            (grid/assoc-grid grid pos
+                             (fnil
+                              (-char-of-first cell world)
+                              background-char)))
+          grid
+          (grid/grid-entries grid)))
+
+(comment
+  ; How do I test this?
+  (render-grid [[] []])
+  :rcf)

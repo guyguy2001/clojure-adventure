@@ -6,7 +6,8 @@
  )
 
 (ns clojure-adventure.grid
-  (:require [clojure-adventure.vec2 :as vec2]))
+  (:require [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.grid :as grid]))
 
 
 
@@ -47,15 +48,25 @@
 
 ; TODO: chagne to [grid [x y] value] to be more similar to assoc-in?
 (defn assoc-grid
-  [grid x y value]
-  (if (in-bounds? grid x y)
-    (assoc-in grid [y x] value)
-    (throw
-     (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y}))))
+  ([grid pos value]
+   (assoc-grid grid (:x pos) (:y pos) value))
+  ([grid x y value]
+   (if (in-bounds? grid x y)
+     (assoc-in grid [y x] value)
+     (throw
+      (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
 
 (defn assoc-grid-vec2
   [grid {x :x y :y} value]
   (assoc-grid grid x y value))
+
+(defn update-grid
+  [grid pos f & args] 
+  (let [x (:x pos), y (:y pos)]
+    (if (in-bounds? grid x y)
+    (apply update-in grid [y x] f args)
+    (throw
+     (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
 
 (def empty-cell ".") ; TODO: Move this to population.clj, make empty cells be represented as nil or smth
 
@@ -130,6 +141,7 @@
 "Grid rewrite thoughts:
  * There's no reason to embed stuff directly into the ascii (like how I did with #), it's kinda silly
    Also the whole concept of layers which are just 2d arrays are kinda silly
+ * I also think I'll do away with layers, I'll just have objects, maybe sorted by :layer
  
  Concerete plans:
  * Remove grid2d layers - the inputs are only 1d lists of objects.
@@ -142,4 +154,35 @@
    * Do I give up on that idea for the sake of simplicity and being able to just change :pos?
       * I do need to pass the world already for bounds checking, so I guess this isn't that bad
  * Semi-related but very important - I'm passing state everywhere, and I now finally see that it makes testing / playing with stuff more difficult.
-   How do I stop?"
+   How do I stop?
+   * I guess just like in bevy, I'll just ask for the right parameters; If I need the world and a specific notification queue, I'll ask for them.
+   * This also means that the world stuff needs to take the world and not the state.
+ "
+
+(defn add-to-grid
+  [grid [path entity]]
+  (update-grid grid
+               (:pos entity)
+               #(conj % path)))
+
+(defn combine-to-grid
+  [starting-grid entries]
+  (reduce add-to-grid starting-grid entries))
+
+(defn grid-entries
+  [grid]
+  (for [x (width grid)
+        y (height grid)]
+    [(vec2/vec2 x y) (get-grid grid x y)])) ; TODO: What is this grid I'm getting here?
+
+(comment
+  (defn dbg
+    [foo]
+    (println foo)
+    foo)
+  (def starting-grid [[[] []] [[] []]])
+  (def entries [[:player {:pos (vec2/vec2 0 1) :symbol "@"}]
+                [:enemy {:pos (vec2/vec2 1 0) :symbol "+"}]
+                [:foo {:pos (vec2/vec2 1 0) :symbol "+"}]])
+  (combine-to-grid starting-grid entries)
+  :rcf)
