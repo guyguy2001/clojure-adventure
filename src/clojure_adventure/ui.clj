@@ -71,12 +71,17 @@
    "X" {:fg :red}
    "C" {:fg :magenta}})
 
+
+(defn draw-grid
+  [screen grid]
+  (doseq [[y row] (enumerate grid)
+          [x cell] (enumerate row)]
+    (s/put-string screen x y cell (get color-map cell))))
+
 (defn draw-world
   [screen state]
   (let [grid (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list state)))]
-    (doseq [[y row] (enumerate grid)
-            [x cell] (enumerate row)]
-      (s/put-string screen x y cell (get color-map cell)))))
+    (draw-grid screen grid)))
 
 (defn render-bar
   [width fill-ratio]

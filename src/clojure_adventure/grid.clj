@@ -64,9 +64,9 @@
   [grid pos f & args] 
   (let [x (:x pos), y (:y pos)]
     (if (in-bounds? grid x y)
-    (apply update-in grid [y x] f args)
-    (throw
-     (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
+      (apply update-in grid [y x] f args)
+      (throw
+       (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
 
 (def empty-cell ".") ; TODO: Move this to population.clj, make empty cells be represented as nil or smth
 
@@ -156,9 +156,13 @@
  * Semi-related but very important - I'm passing state everywhere, and I now finally see that it makes testing / playing with stuff more difficult.
    How do I stop?
    * I guess just like in bevy, I'll just ask for the right parameters; If I need the world and a specific notification queue, I'll ask for them.
-   * This also means that the world stuff needs to take the world and not the state.
+     * This also means that the world stuff needs to take the world and not the state.
+   * Thinking about it in terms of bevy - it makes total sense that the get_neighboring_objects(pos) function is a method of some World/Grid, not some nebulous state thingy.
+     In my case, the world seems to contain both the entity list (a pretty hardcode ecs thing), but also a mapping between 2d coordinate space and these objects.
+     Right now I'm starting to see this separation more clearly - as I'm (finally) getting the 2d grid to be the source of truth for world-ly stuff, instead of the :objects dict.
  "
 
+; It seems like now I'm operating on Grid<Vec<world-identifiers>> as my source of truth, and also rendering a Grid<char>.
 (defn add-to-grid
   [grid [path entity]]
   (update-grid grid
@@ -171,15 +175,31 @@
 
 (defn grid-entries
   [grid]
-  (for [x (width grid)
-        y (height grid)]
-    [(vec2/vec2 x y) (get-grid grid x y)])) ; TODO: What is this grid I'm getting here?
+  (for [x (range (width grid))
+        y (range (height grid))]
+    [(vec2/vec2 x y) (get-grid grid x y)]))
+
+(defn map-entries-grid
+  [f grid]
+  (reduce (fn [grid [pos cell]]
+            (grid/assoc-grid grid pos
+                             (f pos cell)))
+          grid
+          (grid/grid-entries grid)))
+
+(defn map-grid
+  [f grid]
+  (mapv (fn [row]
+          (mapv (fn [cell] (f cell))
+                row))
+        grid))
 
 (comment
-  (defn dbg
-    [foo]
-    (println foo)
-    foo)
+  (map-entries-grid (fn [x y] [x y]) [[1 2] [3 4]])
+  (map-grid (fn [x] [x]) [[1 2] [3 4]])
+  :rcf)
+
+(comment 
   (def starting-grid [[[] []] [[] []]])
   (def entries [[:player {:pos (vec2/vec2 0 1) :symbol "@"}]
                 [:enemy {:pos (vec2/vec2 1 0) :symbol "+"}]

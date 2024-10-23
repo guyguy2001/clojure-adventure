@@ -122,21 +122,33 @@
 
 
 (defn -char-of-first
-  [cell-items world]
+  [cell-items state]
   ; TODO: get-object expects state not wrold
-  (:symbol (get-object world (first cell-items))))
+  ; I think I'll keep it as state for now, but I'm 90% sure I want to change all of the world/ stuff to receive world instead of state.
+  (:symbol (get-object state (first cell-items))))
 
 (defn render-grid
-  [grid world background-char]
-  (reduce (fn [grid [pos cell]]
-            (grid/assoc-grid grid pos
-                             (fnil
-                              (-char-of-first cell world)
-                              background-char)))
-          grid
-          (grid/grid-entries grid)))
+  [grid state background-char]
+  (grid/map-grid (fn [cell]
+                   (or (-char-of-first cell state)
+                       background-char))
+                 grid))
 
 (comment
   ; How do I test this?
-  (render-grid [[] []])
+  (require '[clojure-adventure.core :as core])
+  (require '[clojure-adventure.ui :as ui])
+  (require '[lanterna.screen :as s])
+  (def screen (do
+                  ; Start by cleaning the old screen 
+                (when (bound? #'screen)
+                  (s/stop (var-get #'screen)))
+                (ui/setup-screen {:font-size 8})))
+  (def state core/initial-state)
+  (def object-entries (get-object-list state))
+  (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
+  (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) ".")
+  
+  (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map object-entries) state ".")) 
+  (s/redraw screen)
   :rcf)
