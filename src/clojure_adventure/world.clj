@@ -1,7 +1,9 @@
 (ns clojure-adventure.world
-  (:require [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.world-impl.entities-map :as entities-map]
-            [clojure-adventure.grid :as grid]))
+  (:require
+   [clojure-adventure.grid :as grid]
+   [clojure-adventure.utils :as utils]
+   [clojure-adventure.vec2 :as vec2]
+   [clojure-adventure.world-impl.entities-map :as entities-map]))
 
 
 (defn new-world
@@ -15,44 +17,46 @@
 (defn -get-absolute-object-path
   "Returns the path you're supposed to use when accessing the state"
   [[type index]]
-  [:world :objects type :data index])
+  [:objects type :data index])
   ; TODO - this doesn't use the entities_map abstractions at all.
   ; Maybe I should also provide an abstraction for the entire :objects dict?
   ; Maybe it should be in place of the current abstraction?
 
 ; TODO: Do I want this to return nil if the identifier is nil? I think so, due to clojure^TM
 (defn get-object
-  [state identifier]
-  (get-in state (-get-absolute-object-path identifier))) ; TODO
+  [world identifier]
+  (get-in world (-get-absolute-object-path identifier))) ; TODO
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (def _state core/initial-state)
-  (get-object _state [:players 0])
-  (get-object _state [:enemies 0])
+  (def world (:world core/initial-state))
+  (get-object world [:players 0])
+  (get-object world [:enemies 0])
   :rcf)
 
 (defn get-paths-of-type
-  [state type] ; TODO: arg ordering
-  (let [map (get-in state [:world :objects type])
+  [world type] ; TODO: arg ordering
+  (let [map (get-in world [:objects type])
         keys (entities-map/entries-keys map)] ; TODO
     (mapv (fn [k] [type k]) keys))) ; TODO - entities map abstractions
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (def _state core/initial-state)
-  (get-paths-of-type _state :players) ; [[:players 0]]
+  (def world (:world core/initial-state))
+  (get-paths-of-type world :players) ; [[:players 0]]
+  (get-entries-of-type world :players)
   :rcf)
 
 (defn get-entries-of-type
-  [state type]
-  (let [paths (get-paths-of-type state type)]
-    (mapv (fn [path] [path (get-object state path)]) paths)))
+  [world type]
+  (let [paths (get-paths-of-type world type)]
+    (mapv (fn [path] [path (get-object world path)])
+          paths)))
 
 (defn spawn-objects
-  [state type objects]
-  (-> state
-      (update-in [:world :objects type]
+  [world type objects]
+  (-> world
+      (update-in [:objects type]
                  #(as-> % ents
                     (if (nil? ents)
                       entities-map/-empty-map
@@ -60,77 +64,73 @@
                     (reduce entities-map/insert ents objects)))))
 
 (comment
-  (spawn-objects core/initial-state :players ["p1" "p2"])
+  (-> (:world core/initial-state)
+      (spawn-objects :players ["p1" "p2"])
+      (get-entries-of-type :players))
   :rcf)
 
 (defn despawn
-  [state [type key]]
-  (update-in state [:world :objects type]
+  [world [type key]]
+  (update-in world [:objects type]
              #(do
                 (assert (entities-map/contains-entity % key))
                 (entities-map/remove-entity % key))))
 
 (defn update-object
-  [state identifier f & args]
-  (as-> state s
+  [world identifier f & args]
+  (as-> world s
     (apply update-in s (-get-absolute-object-path identifier) f args)
     (if (nil? (get-in s (-get-absolute-object-path identifier)))
       (despawn s identifier)
       s)))
 
-(comment
-  (map #(as-> @core/*state foo
-          (despawn foo [:other %])
-          (get-object-list foo)
-          (count foo))
-       (range 10))
-  (get-paths-of-type core/new-state :other)
-  (get-object-list @core/*state)
-  :rcf)
+(defn dbg
+  [x]
+  (println x)
+  x)
 
 (defn get-object-list
   "Transforms {:players [a b] :enemies [d]} to ([[:players 0] a] [[:players 1] b] [[:enemies 0] d])
    [[:enemies 0] d] is basically a `[deep-key val]` map entry"
-  [state]
-  (->> (get-in state [:world :objects])
+  [world]
+  (->> (:objects world)
        (keys)
-       (map #(get-paths-of-type state %))
+       (map #(get-paths-of-type world %))
        (apply concat)
-       (map (fn [path] [path (get-object state path)])))) ; This didn't require changing - yay!
+       (map (fn [path] [path (get-object world path)])))) ; This didn't require changing - yay!
 
 (comment
-  (get-object-list {:world {:objects {:players {:data [:a :b]} :enemies {:data [:c]}}}})
+  (get-object-list {:objects {:players (entities-map/make-entities-map [:a :b])
+                              :enemies (entities-map/make-entities-map [:c])}})
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
 ; both for performance (O(1) access from xy to object), and also logical abstraction
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
 (defn get-object-at-pos
-  [state pos]
-  (first (filter #(= pos (:pos (second %))) (get-object-list state))))
+  [world pos]
+  (first (filter #(= pos (:pos (second %))) (get-object-list world))))
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (get-object-at-pos core/initial-state (vec2/vec2 53 15))
+  (get-object-at-pos (:world core/initial-state) (vec2/vec2 53 15))
   :rcf)
 
 
 
 (defn get-player
-  [state]
-  (get-object state [:players 0]))
+  [world]
+  (get-object world [:players 0]))
 
 
 (defn -char-of-first
-  [cell-items state]
-  ; TODO: get-object expects state not wrold
-  ; I think I'll keep it as state for now, but I'm 90% sure I want to change all of the world/ stuff to receive world instead of state.
-  (:symbol (get-object state (first cell-items))))
+  [cell-items world]
+  (:symbol (get-object world (first cell-items))))
 
 (defn render-grid
-  [grid state background-char]
+  [grid world background-char]
   (grid/map-grid (fn [cell]
-                   (or (-char-of-first cell state)
+                   (or (-char-of-first cell world)
                        background-char))
                  grid))
 
@@ -145,10 +145,14 @@
                   (s/stop (var-get #'screen)))
                 (ui/setup-screen {:font-size 8})))
   (def state core/initial-state)
-  (def object-entries (get-object-list state))
+  (def object-entries (get-object-list (:world state)))
+  object-entries
   (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
   (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) ".")
-  
-  (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map object-entries) state ".")) 
+  object-entries
+  (->> (grid/combine-to-grid starting-map object-entries)
+       (grid/grid-entries)
+       (filter (fn [[k v]] (not= v []))))
+  (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) "."))
   (s/redraw screen)
   :rcf)

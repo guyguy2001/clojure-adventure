@@ -22,15 +22,14 @@
                       {:name nil, :pos {:x 81, :y 4}, :symbol "X"}])
 
 (def state
-  (as-> {:world (world/new-world (get-initial-world-grid))
-         :interaction-focus nil
-         :inventory {:iron 1 :copper 3}}
-        state
-    (world/spawn-objects state :players initial-player)
-    (world/spawn-objects state :enemies initial-enemies)
-    (world/spawn-objects
-     state :other [{:pos {:x 51 :y 13} :symbol "?"
-                    :name "Spellbook"}])))
+  {:world (as-> (world/new-world (get-initial-world-grid)) world
+            (world/spawn-objects world :players initial-player)
+            (world/spawn-objects world :enemies initial-enemies)
+            (world/spawn-objects
+             world :other [{:pos {:x 51 :y 13} :symbol "?"
+                            :name "Spellbook"}]))
+   :interaction-focus nil
+   :inventory {:iron 1 :copper 3}})
 
 (defn load-edn
   "Load edn from an io/reader source (filename or io/resource)."
@@ -53,9 +52,9 @@
   (testing "Testing that rendering the initial state doesn't get regressed"
     (let [expected-render (load-edn "test/clojure_adventure/population_test_data/expected_combined_grid.edn")
           ; Taken from ui.clj:
-          actual-render (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list state)))]
+          actual-render (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list (:world state))))]
       (is (= expected-render actual-render)))))
 
 (comment
-  (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list state)))
+  (grid/combine-layers (:base-grid (:world state)) (map second (world/get-object-list (:world state))))
   :rcf)

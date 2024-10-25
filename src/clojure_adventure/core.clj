@@ -33,13 +33,13 @@
 
 
 (defn get-neighboaring-objects
-  [state pos]
-  (map (partial world/get-object-at-pos state)
-       (grid/get-neighboaring-cells (get-in state [:world :base-grid]) pos)))
+  [world pos]
+  (map #(world/get-object-at-pos world %)
+       (grid/get-neighboaring-cells (:base-grid world) pos)))
 
 (comment
-  (let [state initial-state]
-    [(get-neighboaring-objects state (vec2/vec2 52 15))])
+  (let [world (:world initial-state)]
+    (get-neighboaring-objects world (vec2/vec2 52 15)))
   :rcf)
 
 (defn get-interaction-focus-target
@@ -47,22 +47,22 @@
   [state pos]
   (first ; This first is to take the "key" of [[:players 0] { object data ... }]
    (first (filter (comp not nil?)
-                  (get-neighboaring-objects state pos)))))
+                  (get-neighboaring-objects (:world state) pos)))))
 
 
 (comment
-  (get-neighboaring-objects initial-state {:x 53 :y 15})
+  (get-neighboaring-objects (:world initial-state) {:x 53 :y 15})
   (get-interaction-focus-target
    initial-state {:x 51, :y 14})
-  (world/get-object-list initial-state)
-  (:pos (world/get-player @*state))
-  (:name (world/get-object @*state (:interaction-focus @*state)))
+  (world/get-object-list (:world initial-state))
+  (:pos (world/get-player (:world @*state)))
+  (:name (world/get-object (:world @*state) (:interaction-focus @*state)))
   :rcf)
 
 
 (defn get-new-interaction-focus
   [state]
-  (get-interaction-focus-target state (:pos (world/get-player state))))
+  (get-interaction-focus-target state (:pos (world/get-player (:world state)))))
 
 ; TODO: get despawning really working so that I have a limit on the copper
 ; Thought: I want to have the copper number flash green for a second after picking something up.
@@ -74,26 +74,25 @@
   [state action]
   (if (= action :interact)
     (let [target-path (:interaction-focus state)
-          object (world/get-object state target-path)]
+          object (world/get-object (:world state) target-path)]
       (if (= (:symbol object) "C") ; Big todo
         (-> state
             (update-in [:inventory :copper] inc)
             (assoc-in [:notifications :inventory :copper] :resource-added)
-            (world/update-object
-             target-path
-             (fn [ore] (let [durability (dec (:durability ore))
-                             ore (assoc ore :durability durability)
-                             ore (if (<= durability 0)
-                                   nil
-                                   ore)]
-                         ore))))
+            (update :world
+                    #(world/update-object
+                      %
+                      target-path
+                      (fn [ore] (let [durability (dec (:durability ore))
+                                      ore (assoc ore :durability durability)
+                                      ore (if (<= durability 0)
+                                            nil
+                                            ore)]
+                                  ore)))))
         state))
     state))
 
 (comment
-  (let [ore (world/get-object @*state (:interaction-focus @*state))]
-    (:dead ore))
-  #(if (= 1 2) 3 %)
   (def new-state (-> @*state
                      (handle-mining :interact)
                      (handle-mining :interact)
@@ -105,7 +104,7 @@
                      (handle-mining :interact)))
   (ui/draw-screen @*screen new-state)
   (get-in new-state [:world :objects :other])
-  (map second (world/get-object-list new-state))
+  (map second (world/get-object-list (:world new-state)))
   :rcf)
 
 (defn evaluate-turn
@@ -175,23 +174,22 @@
 
 ; TODO: This still accesses :world :base-grid
 (def initial-state
-  (as-> {:world (world/new-world (get-initial-world-grid))
-         :interaction-focus nil
-         :inventory {:iron 1 :copper 3}
-         :notifications (notifications/new-queue)}
-        state
-    (world/spawn-objects state :players [{:pos {:x 53 :y 15}
-                                          :facing-direction (vec2/vec2 1 0)
-                                          :symbol "@"}])
-    (world/spawn-objects state :enemies (population/populate-grid-return
-                                         (get-in state [:world :base-grid]) "X" 5))
-    (world/spawn-objects
-     state :other  (concat
-                    [{:pos {:x 51 :y 13} :symbol "?"
-                      :name "Spellbook"}]
-                    (population/populate-grid-return-2
-                     (get-in state [:world :base-grid])
-                     {:symbol "C" :name "Copper Ore" :durability 5} 10)))))
+  {:world (as-> (world/new-world (get-initial-world-grid)) world
+            (world/spawn-objects world :players [{:pos {:x 53 :y 15}
+                                                  :facing-direction (vec2/vec2 1 0)
+                                                  :symbol "@"}])
+            (world/spawn-objects world :enemies (population/populate-grid-return
+                                                 (:base-grid world) "X" 5))
+            (world/spawn-objects
+             world :other (concat
+                           [{:pos {:x 51 :y 13} :symbol "?"
+                             :name "Spellbook"}]
+                           (population/populate-grid-return-2
+                            (:base-grid world)
+                            {:symbol "C" :name "Copper Ore" :durability 5} 10))))
+   :interaction-focus nil
+   :inventory {:iron 1 :copper 3}
+   :notifications (notifications/new-queue)})
 
 (comment
   (reset! *state initial-state)
@@ -201,13 +199,13 @@
   (def pos (vec2/vec2 51 13))
   objects
   (map #(= pos (:pos %)) objects)
-  (world/get-object-at-pos state (vec2/vec2 51 13))
+  (world/get-object-at-pos (:world state) (vec2/vec2 51 13))
   (get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
-  (map (partial world/get-object-at-pos (:objects state))
+  (map (partial world/get-object-at-pos (:world state))
        (grid/get-neighboaring-cells (get-in state [:world :base-grid]) (vec2/vec2 51 12)))
 
-  (world/get-object-at-pos state (vec2/vec2 51 13))
+  (world/get-object-at-pos (:world state) (vec2/vec2 51 13))
 
   :rcf)
 
@@ -242,10 +240,10 @@
   (keys @*state)
   (reset! *state initial-state)
   (get-new-interaction-focus @*state)
-  (:pos (world/get-player @*state))
+  (:pos (world/get-player (:world @*state)))
   (combat/handle-combat @*state :fireball)
-  (world/get-object @*state [:fireball 0])
-  (world/get-entries-of-type @*state :fireball)
+  (world/get-object (:world @*state) [:fireball 0])
+  (world/get-entries-of-type (:world @*state) :fireball)
   :rcf)
 
 ; I think that a lot of the issues I encountered during this refactor are caused by the fact that I accessed data directly instead of putting it behind abstractions - for example, by using get-in to get the data from the grid, instead of a grid/world abstraction, that would help me notice that I'm accessing the wrong thing, or would make it so I don't have the "wrong thing" to access in the first place

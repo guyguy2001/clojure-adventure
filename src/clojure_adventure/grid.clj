@@ -61,7 +61,7 @@
   (assoc-grid grid x y value))
 
 (defn update-grid
-  [grid pos f & args] 
+  [grid pos f & args]
   (let [x (:x pos), y (:y pos)]
     (if (in-bounds? grid x y)
       (apply update-in grid [y x] f args)
@@ -122,7 +122,9 @@
 
 (defn get-neighboaring-cells
   [grid pos]
-  (filter (partial in-bounds? grid) (map #(vec2/add pos %) vec2/cardinal-directions)))
+  (->> vec2/cardinal-directions
+       (map #(vec2/add pos %))
+       (filter #(in-bounds? grid %))))
 
 (comment
   (def grid [[1 2] [3 4]])
@@ -175,7 +177,7 @@
   (map-grid (fn [x] [x]) [[1 2] [3 4]])
   :rcf)
 
-(comment 
+(comment
   (def starting-grid [[[] []] [[] []]])
   (def entries [[:player {:pos (vec2/vec2 0 1) :symbol "@"}]
                 [:enemy {:pos (vec2/vec2 1 0) :symbol "+"}]

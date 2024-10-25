@@ -1,4 +1,4 @@
-(ns src.clojure-adventure.utils)
+(ns clojure-adventure.utils)
 
 (defn fdbg
   [f]

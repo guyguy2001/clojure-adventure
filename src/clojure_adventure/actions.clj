@@ -21,10 +21,12 @@
              :enemies (fn[state enemy] <new-enemy>)]"
   [state actions]
   (reduce (fn [state [type f]]
-            (let  [paths (world/get-paths-of-type state type)]
+            (let  [world (:world state)
+                   paths (world/get-paths-of-type world type)]
               (reduce (fn [state path]
-                        (world/update-object state path
-                                             (fn [obj] (f state obj))))
+                        (update state :world
+                                #(world/update-object % path
+                                                      (fn [obj] (f state obj)))))
                       state paths)))
           state
           (partition 2 actions)))
@@ -33,17 +35,19 @@
   (require '[clojure-adventure.core :as core]
            '[clojure-adventure.vec2 :as vec2]
            '[clojure-adventure.movement :as movement])
-  (apply-to-objects @core/*state
+  (get-in core/initial-state [:world :objects])
+  (apply-to-objects core/initial-state
                     [:players (fn [{:keys [world]} player]
                                 (if (not= :right nil)
-                                  #(movement/try-move-by world player (vec2/vec2 1 2))
+                                  (movement/try-move-by world player (vec2/vec2 1 2))
                                   player))
 
                      :enemies
                      (fn [{:keys [world]} enemy] (core/enemy-turn world enemy))])
-  (apply-to-objects
-   core/initial-state
-   [:enemies (fn [{:keys [world]} e] (core/enemy-turn world e))])
+  (-> core/initial-state
+      (apply-to-objects
+       [:enemies (fn [{:keys [world]} e] (core/enemy-turn world e))])
+      (get-in [:world :objects]))
   :rcf)
 
 (defn update-with-context
