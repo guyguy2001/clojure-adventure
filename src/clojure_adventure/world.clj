@@ -57,11 +57,7 @@
   [world type objects]
   (-> world
       (update-in [:objects type]
-                 #(as-> % ents
-                    (if (nil? ents)
-                      entities-map/-empty-map
-                      ents)
-                    (reduce entities-map/insert ents objects)))))
+                 #(reduce entities-map/insert % objects))))
 
 (comment
   (-> (:world core/initial-state)

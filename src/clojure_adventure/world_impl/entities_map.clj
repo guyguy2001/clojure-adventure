@@ -5,9 +5,10 @@
 
 (defn insert
   [map entity]
-  (as-> map m
-    (assoc-in m [:data (:next m)] entity)
-    (update m :next inc)))
+  (let [map (if (nil? map) -empty-map map)]
+    (as-> map m
+      (assoc-in m [:data (:next m)] entity)
+      (update m :next inc))))
 
 (defn contains-entity
   [map key]
