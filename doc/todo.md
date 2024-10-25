@@ -39,9 +39,9 @@ b) be inside of the object as well.
 
 - DONE - Get the world/ functions to accept `world` instead of `state`
 
-- Implement the new grid into the main code
 - Implement populations for the new grid
-- (for the populate-return stuff - think if I even want to return the new stuff, or just modify the world)
+  - (for the populate-return stuff - think if I even want to return the new stuff, or just modify the world)
+- Implement the new grid into the main code
 - Get functions which move entities to update the 2d grid
 
 - Put the IDs of objects into the objects themselves

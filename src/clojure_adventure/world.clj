@@ -116,6 +116,16 @@
   (get-object-at-pos (:world core/initial-state) (vec2/vec2 53 15))
   :rcf)
 
+(defn get-neighboaring-objects
+  [world pos]
+  (map #(get-object-at-pos world %)
+       (grid/get-neighboaring-cells (:base-grid world) pos)))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (let [world (:world core/initial-state)]
+    (get-neighboaring-objects world (vec2/vec2 52 15)))
+  :rcf)
 
 
 (defn get-player

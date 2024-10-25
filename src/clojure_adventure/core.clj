@@ -32,26 +32,16 @@
   (movement/try-move-by world enemy (rand-nth vec2/cardinal-directions)))
 
 
-(defn get-neighboaring-objects
-  [world pos]
-  (map #(world/get-object-at-pos world %)
-       (grid/get-neighboaring-cells (:base-grid world) pos)))
-
-(comment
-  (let [world (:world initial-state)]
-    (get-neighboaring-objects world (vec2/vec2 52 15)))
-  :rcf)
-
 (defn get-interaction-focus-target
   ;todo: name
   [state pos]
   (first ; This first is to take the "key" of [[:players 0] { object data ... }]
    (first (filter (comp not nil?)
-                  (get-neighboaring-objects (:world state) pos)))))
+                  (world/get-neighboaring-objects (:world state) pos)))))
 
 
 (comment
-  (get-neighboaring-objects (:world initial-state) {:x 53 :y 15})
+  (world/get-neighboaring-objects (:world initial-state) {:x 53 :y 15})
   (get-interaction-focus-target
    initial-state {:x 51, :y 14})
   (world/get-object-list (:world initial-state))
