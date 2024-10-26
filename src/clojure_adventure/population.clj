@@ -1,7 +1,8 @@
 (ns clojure-adventure.population
   (:gen-class)
   (:require [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.grid :as grid]))
+            [clojure-adventure.grid :as grid]
+            [clojure-adventure.world :as world]))
 
 
 (def starting-map (vec (repeat 30 (vec (repeat 100 grid/empty-cell)))))
@@ -39,7 +40,7 @@
   [grid char n]
   (if (= n 0)
     grid
-    (let [empty-spaces (grid/get-empty-spaces grid)
+    (let [empty-spaces (grid/old-get-empty-spaces grid)
           [x y] (rand-nth empty-spaces)]
       (populate-grid-inplace (assoc-in grid [y x] char)
                              char
@@ -52,10 +53,10 @@
   ([grid char n name]
    (if (= n 0)
      []
-     (let [empty-spaces (grid/get-empty-spaces grid)
+     (let [empty-spaces (grid/old-get-empty-spaces grid)
            [x y] (rand-nth empty-spaces)]
        (cons {:pos (vec2/vec2 x y) :symbol char :name name}
-             (populate-grid-return (assoc-in grid [y x] char) ; only modified for get-empty-spaces
+             (populate-grid-return (assoc-in grid [y x] char) ; only modified for old-get-empty-spaces
                                    char
                                    (dec n)
                                    name))))))
@@ -65,10 +66,10 @@
   ([grid object n]
    (if (= n 0)
      []
-     (let [empty-spaces (grid/get-empty-spaces grid)
+     (let [empty-spaces (grid/old-get-empty-spaces grid)
            [x y] (rand-nth empty-spaces)]
        (cons (assoc object :pos (vec2/vec2 x y))
-             (populate-grid-return-2 (assoc-in grid [y x] (:symbol object)) ; only modified for get-empty-spaces
+             (populate-grid-return-2 (assoc-in grid [y x] (:symbol object)) ; only modified for old-get-empty-spaces
                                      object
                                      (dec n)))))))
 (comment
@@ -88,3 +89,19 @@
 ;;   (populate-square starting-map "#" {:x 50 :y 10} 10)
   :rcf)
 
+(defn find-empty-cell
+  [world]
+  (grid/get-empty-spaces (:new-grid world)))
+
+; TODO: This is incredibly unoptimized. I should just ask for N empty cells prolly?
+(defn spawn-at-an-empty-cell
+  [world type object]
+  (let [pos (find-empty-cell world)
+        object (assoc object :pos pos)]
+    (world/spawn-objects world type [object])))
+
+(defn spawn-at-random-empty-cells
+  [world type object n]
+  (reduce (fn [world _] (spawn-at-an-empty-cell world type object))
+          world
+          (range n)))

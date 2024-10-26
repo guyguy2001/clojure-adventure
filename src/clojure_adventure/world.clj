@@ -1,14 +1,17 @@
 (ns clojure-adventure.world
   (:require
    [clojure-adventure.grid :as grid]
-   [clojure-adventure.utils :as utils]
    [clojure-adventure.vec2 :as vec2]
-   [clojure-adventure.world-impl.entities-map :as entities-map]))
+   [clojure-adventure.world-impl.entities-map :as entities-map]
+   [clojure-adventure.world-impl.ids-grid :as ids-grid]))
 
 
 (defn new-world
   [base-grid]
   {:base-grid base-grid
+    ; The goal is to get this to be the same I think
+   :new-grid (vec (repeat (grid/height base-grid)
+                          (vec (repeat (grid/width base-grid) []))))
    :objects {}})
 
 ; Todo: currently everything takes `state`, and that's gonna bite me in the ass if I have...
@@ -53,11 +56,20 @@
     (mapv (fn [path] [path (get-object world path)])
           paths)))
 
+(defn spawn-object
+  [world type object]
+  (let [[new-map id] (entities-map/insert
+                      (get-in world [:objects type])
+                      object)]
+    (-> world
+        (assoc-in [:objects type]
+                  new-map)
+        (update :new-grid ids-grid/insert-id (:pos object) id))))
+
 (defn spawn-objects
   [world type objects]
-  (-> world
-      (update-in [:objects type]
-                 #(reduce entities-map/insert % objects))))
+  (reduce (fn [world obj] (spawn-object world type obj))
+          world objects))
 
 (comment
   (-> (:world core/initial-state)
@@ -142,20 +154,17 @@
 
 (comment
   ; How do I test this?
-  (require '[clojure-adventure.core :as core])
-  (require '[clojure-adventure.ui :as ui])
-  (require '[lanterna.screen :as s])
+  (require '[clojure-adventure.core :as core]
+           '[clojure-adventure.ui :as ui]
+           '[lanterna.screen :as s])
   (def screen (do
                   ; Start by cleaning the old screen 
                 (when (bound? #'screen)
                   (s/stop (var-get #'screen)))
                 (ui/setup-screen {:font-size 8})))
-  (def state core/initial-state)
-  (def object-entries (get-object-list (:world state)))
-  object-entries
-  (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
-  (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) ".")
-  object-entries
+  (def state @core/*state)
+  (def object-entries (get-object-list (:world state))) 
+  (def starting-map (vec (repeat 30 (vec (repeat 100 []))))) 
   (->> (grid/combine-to-grid starting-map object-entries)
        (grid/grid-entries)
        (filter (fn [[k v]] (not= v []))))

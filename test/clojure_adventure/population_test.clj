@@ -47,8 +47,10 @@
 ; I should get into seeded randomness...
 (deftest initial-map-generation-test
   (testing "That spawning the initial map doesn't get regressed"
-    (let [expected-state (load-edn "test/clojure_adventure/population_test_data/expected_state.edn")]
-      (is (= state expected-state))))
+    (let [expected-state (load-edn "test/clojure_adventure/population_test_data/expected_state.edn")
+          normalized-state (update state :world dissoc :new-grid) ; The edn snapshot was taken before :new-grid
+          ]
+      (is (= normalized-state expected-state))))
   (testing "Testing that rendering the initial state doesn't get regressed"
     (let [expected-render (load-edn "test/clojure_adventure/population_test_data/expected_combined_grid.edn")
           ; Taken from ui.clj:
