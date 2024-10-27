@@ -164,19 +164,14 @@
 
 ; TODO: This still accesses :world :base-grid
 (def initial-state
-  {:world (as-> (get-initial-world) world
-            (world/spawn-objects world :players [{:pos {:x 53 :y 15}
-                                                  :facing-direction (vec2/vec2 1 0)
-                                                  :symbol "@"}])
-            (world/spawn-objects world :enemies (population/populate-grid-return
-                                                 (:base-grid world) "X" 5))
-            (world/spawn-objects
-             world :other (concat
-                           [{:pos {:x 51 :y 13} :symbol "?"
-                             :name "Spellbook"}]
-                           (population/populate-grid-return-2
-                            (:base-grid world)
-                            {:symbol "C" :name "Copper Ore" :durability 5} 10))))
+  {:world (-> (get-initial-world)
+              (world/spawn-objects :players [{:pos {:x 53 :y 15}
+                                              :facing-direction (vec2/vec2 1 0)
+                                              :symbol "@"}])
+              (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
+              (world/spawn-objects :other [{:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}])
+              (population/spawn-at-random-empty-cells
+               :copper {:symbol "C" :name "Copper Ore" :durability 5} 10))
    :interaction-focus nil
    :inventory {:iron 1 :copper 3}
    :notifications (notifications/new-queue)})
