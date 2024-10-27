@@ -115,9 +115,13 @@
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
 ; both for performance (O(1) access from xy to object), and also logical abstraction
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
+(defn get-objects-at-pos
+  [world pos]
+  (filter #(= pos (:pos (second %))) (get-object-list world)))
+
 (defn get-object-at-pos
   [world pos]
-  (first (filter #(= pos (:pos (second %))) (get-object-list world))))
+  (first (get-objects-at-pos world pos)))
 
 (comment
   (require '[clojure-adventure.core :as core])
@@ -163,8 +167,8 @@
                   (s/stop (var-get #'screen)))
                 (ui/setup-screen {:font-size 8})))
   (def state @core/*state)
-  (def object-entries (get-object-list (:world state))) 
-  (def starting-map (vec (repeat 30 (vec (repeat 100 []))))) 
+  (def object-entries (get-object-list (:world state)))
+  (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
   (->> (grid/combine-to-grid starting-map object-entries)
        (grid/grid-entries)
        (filter (fn [[k v]] (not= v []))))

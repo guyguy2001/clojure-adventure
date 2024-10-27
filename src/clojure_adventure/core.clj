@@ -155,16 +155,16 @@
                 (println "Encountered exception while running the turn:" e))))
           (recur))))))
 
-(defn get-initial-world-grid
+(defn get-initial-world
   []
-  (-> population/starting-map
-      (population/populate-square "#" {:x 50 :y 10} 10)
-      (grid/assoc-grid 50 15 grid/empty-cell)
-      (population/populate-grid-inplace "^" 10)))
+  (-> (world/new-world population/starting-map)
+      (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
+      (population/remove-all-in-cell (vec2/vec2 50 15))
+      (population/spawn-at-random-empty-cells :tree {:symbol "^"} 10)))
 
 ; TODO: This still accesses :world :base-grid
 (def initial-state
-  {:world (as-> (world/new-world (get-initial-world-grid)) world
+  {:world (as-> (get-initial-world) world
             (world/spawn-objects world :players [{:pos {:x 53 :y 15}
                                                   :facing-direction (vec2/vec2 1 0)
                                                   :symbol "@"}])

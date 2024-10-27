@@ -5,14 +5,6 @@
             [clojure-adventure.world :refer :all]
             [clojure.test :refer :all]))
 
-(defn get-initial-world-grid
-  []
-  (-> population/starting-map
-      (population/populate-square "#" {:x 50 :y 10} 10)
-      (grid/assoc-grid 50 15 grid/empty-cell)
-      ;(population/populate-grid-inplace "^" 10) ; Removed because of randomness
-      ))
-
 (def initial-player [{:pos {:x 53 :y 15} :symbol "@"}])
 (def initial-enemies [{:name nil, :pos {:x 80, :y 20}, :symbol "X"}
                       {:name nil, :pos {:x 44, :y 18}, :symbol "X"}
@@ -21,7 +13,9 @@
                       {:name nil, :pos {:x 81, :y 4}, :symbol "X"}])
 
 (def world
-  (-> (new-world (get-initial-world-grid))
+  (-> (new-world population/starting-map)
+      (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
+      (population/remove-all-in-cell (vec2/vec2 50 15))
       (spawn-objects :players initial-player)
       (spawn-objects :enemies initial-enemies)
       (spawn-objects :other [{:pos {:x 51 :y 13} :symbol "?"

@@ -11,40 +11,28 @@
 ; populate-vertical-line is my original implementation, and horizontal-line is based on suggestions from slack.
 ; It doesn't really use the vector 2 abstraction, but is cleaner and probably simpler to understand
 (defn populate-horizontal-line
-  [grid symbol {:keys [x y]} length]
-  (reduce (fn [grid i] (grid/assoc-grid grid (+ x i) y symbol))
-          grid
+  [world type object pos length]
+  (reduce (fn [world i] (world/spawn-object world type
+                                            (assoc object :pos (vec2/add pos (vec2/vec2 i 0)))))
+          world
           (range length)))
 
 
 (defn populate-vertical-line
-  [grid symbol start length]
-  (reduce (fn [grid pos] (grid/assoc-grid-vec2 grid pos symbol))
-          grid
-          (map (fn [i] (vec2/add start (vec2/vec2 0 i))) (range length))))
+  [world type object pos length]
+  (world/spawn-objects world type (map (fn [i] (assoc object :pos (vec2/add pos (vec2/vec2 0 i))))
+                                       (range length))))
 
 (defn populate-square
   "###
    # #
    ###"
-  [grid symbol top-left size]
-  (-> grid
-      (populate-horizontal-line symbol top-left size)
-      (populate-vertical-line symbol top-left size)
-      (populate-horizontal-line symbol (vec2/add top-left (vec2/vec2 0 (dec size))) size)
-      (populate-vertical-line symbol (vec2/add top-left (vec2/vec2 (dec size) 0)) size)))
-
-
-(defn populate-grid-inplace
-  "Puts the given character on empty spaces"
-  [grid char n]
-  (if (= n 0)
-    grid
-    (let [empty-spaces (grid/old-get-empty-spaces grid)
-          [x y] (rand-nth empty-spaces)]
-      (populate-grid-inplace (assoc-in grid [y x] char)
-                             char
-                             (dec n)))))
+  [world type object top-left size]
+  (-> world
+      (populate-horizontal-line type object top-left size)
+      (populate-vertical-line type object top-left size)
+      (populate-horizontal-line type object (vec2/add top-left (vec2/vec2 0 (dec size))) size)
+      (populate-vertical-line type object (vec2/add top-left (vec2/vec2 (dec size) 0)) size)))
 
 (defn populate-grid-return
   "Puts the given character on empty spaces"
@@ -82,21 +70,26 @@
   (def symbol "#")
   (def top-left (vec2/vec2 0 0))
   (def size 1)
-  (populate-square [[grid/empty-cell]] "#" {:x 1 :y 1} 1)
-  (populate-square [[grid/empty-cell]] "#" {:x 0 :y 0} 1)
-  (populate-square [[grid/empty-cell]] "#" {:x 1 :y 1} 1)
+  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 0 :y 1} 1)
+  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 0 :y 0} 1)
+  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 1 :y 1} 1)
 ;;   starting-map
 ;;   (populate-square starting-map "#" {:x 50 :y 10} 10)
   :rcf)
 
-(defn find-empty-cell
+(defn get-random-empty-cell
   [world]
-  (grid/get-empty-spaces (:new-grid world)))
+  (rand-nth (grid/get-empty-spaces (:new-grid world))))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (get-random-empty-cell (world/new-world starting-map))
+  :rcf)
 
 ; TODO: This is incredibly unoptimized. I should just ask for N empty cells prolly?
 (defn spawn-at-an-empty-cell
   [world type object]
-  (let [pos (find-empty-cell world)
+  (let [pos (get-random-empty-cell world)
         object (assoc object :pos pos)]
     (world/spawn-objects world type [object])))
 
@@ -105,3 +98,11 @@
   (reduce (fn [world _] (spawn-at-an-empty-cell world type object))
           world
           (range n)))
+
+(defn remove-all-in-cell
+  [world pos]
+  (reduce (fn [world id]
+            (world/despawn world id))
+          world
+          ; The first is to get the entity id from the "entry"
+          (map first (world/get-objects-at-pos world pos))))
