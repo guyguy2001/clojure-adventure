@@ -35,14 +35,25 @@ Unrelated: the ID of objects should:
 a) be called ID.
 b) be inside of the object as well.
 
+"So let's say I think of modifying world/state like I would of a side effect -
+that means that the functions which do it should be further out, maybe in their own module
+Also reading from world could be considered a side effect just like writing to world would
+It could be stated that a function should either receive [world, entity_id] or [entity1, entity2] -
+never have both a world and an entity (not sure if that's a good convention or not)"
+
 ### Actual Tasks
 
 - DONE - Get the world/ functions to accept `world` instead of `state`
 
-- Implement populations for the new grid
-  - (for the populate-return stuff - think if I even want to return the new stuff, or just modify the world)
+- DONE Implement populations for the new grid
 - Implement the new grid into the main code
-- Get functions which move entities to update the 2d grid
+
+  - Fix target selection (broken because now non-intractable objects are also in there)
+  - Fix collision
+  - Update new grid when moving
+  - Remove all instances of :base-grid
+  - Rename :new-grid
+  - See where :new-grid is used directly, if there's a good alternative
 
 - Put the IDs of objects into the objects themselves
 - Retire the functions that return both of them (unless they're also needed for some reason)
