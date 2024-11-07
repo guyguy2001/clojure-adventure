@@ -6,8 +6,7 @@
  )
 
 (ns clojure-adventure.grid
-  (:require [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.grid :as grid]))
+  (:require [clojure-adventure.vec2 :as vec2]))
 
 
 
@@ -155,10 +154,10 @@
 (defn map-entries-grid
   [f grid]
   (reduce (fn [grid [pos cell]]
-            (grid/assoc-grid grid pos
-                             (f pos cell)))
+            (assoc-grid grid pos
+                        (f pos cell)))
           grid
-          (grid/grid-entries grid)))
+          (grid-entries grid)))
 
 (defn map-grid
   [f grid]
