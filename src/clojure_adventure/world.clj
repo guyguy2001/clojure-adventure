@@ -56,15 +56,25 @@
     (mapv (fn [path] [path (get-object world path)])
           paths)))
 
+; TODO: I think the whole consept of entities-map is too complicated.
+; I should just use a uuid for each thing. (get-in world [:objects uuid]) would be the privat impl,
+; and if i want the type I can just ask for it from there.
 (defn spawn-object
   [world type object]
-  (let [[new-map id] (entities-map/insert
-                      (get-in world [:objects type])
-                      object)]
+  (assert (not (nil? (:pos object))))
+  (let [pos (:pos object)
+        [new-map short-id] (entities-map/insert
+                            (get-in world [:objects type])
+                            object)
+        full-id [type short-id]
+        new-map (entities-map/update-entity new-map short-id
+                                            #(-> %
+                                                 (assoc :type type)
+                                                 (assoc :id full-id)))]
     (-> world
         (assoc-in [:objects type]
                   new-map)
-        (update :new-grid ids-grid/insert-id (:pos object) id))))
+        (update :new-grid ids-grid/insert-id pos full-id))))
 
 (defn spawn-objects
   [world type objects]
@@ -156,6 +166,15 @@
                        background-char))
                  grid))
 
+(defn ensure-invariants
+  [world]
+  ; Make sure that all entities have an id, a type, and a pos
+  (doseq [[id entity] (get-object-list world)]
+    (assert (not (nil? (:pos entity))) (format "Entity missing an :pos - %s" entity))
+    (assert (not (nil? (:id entity))) (format "Entity missing an :id - %s" entity))
+    (assert (not (nil? (:type entity))) (format "Entity missing an :type - %s" entity)))
+  world)
+
 (comment
   ; How do I test this?
   (require '[clojure-adventure.core :as core]
@@ -174,4 +193,6 @@
        (filter (fn [[k v]] (not= v []))))
   (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) "."))
   (s/redraw screen)
+  (def world (:world @core/*state))
+  (get-object-list world)
   :rcf)

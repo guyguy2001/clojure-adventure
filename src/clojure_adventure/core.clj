@@ -121,7 +121,8 @@
         (handle-mining
          action)
 
-        (combat/handle-combat action))))
+        (combat/handle-combat action)
+        (update :world world/ensure-invariants))))
 
 (comment
   (def state initial-state)

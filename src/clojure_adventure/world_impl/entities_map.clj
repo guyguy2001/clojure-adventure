@@ -31,6 +31,10 @@
   (remove-entity example-map 2)
   :rcf)
 
+(defn update-entity
+  [map id f & args]
+  (apply update-in map [:data id] f args))
+
 (defn make-entities-map
   [entities]
   (reduce insert -empty-map entities))
