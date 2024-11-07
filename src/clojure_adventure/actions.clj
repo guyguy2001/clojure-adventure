@@ -50,6 +50,20 @@
       (get-in [:world :objects]))
   :rcf)
 
+(defn reduce-by-entity-type
+  "example: (reduce-by-entity-type state :players (fn [state player-id] state))"
+  [state type f]
+  (reduce f
+          state
+          (world/get-paths-of-type (:world state) type)))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (reduce-by-entity-type @core/*state :players (fn [state player]
+                                                 (println player)
+                                                 state))
+  :rcf)
+
 (defn update-with-context
   "Like update, but the callback receives the entire map, not just the original value"
   [map key f]

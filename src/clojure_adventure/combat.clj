@@ -11,10 +11,11 @@
 
 (defn fireball-attack
   [state caster]
-  (world/spawn-objects (:world state)
-                       :fireball [{:pos (:pos caster)
-                                   :facing-direction (:facing-direction caster)
-                                   :symbol "•"}]))
+  (update state :world
+          #(world/spawn-objects %
+                                :fireball [{:pos (:pos caster)
+                                            :facing-direction (:facing-direction caster)
+                                            :symbol "•"}])))
 
 
 (defn handle-attacking
@@ -24,13 +25,14 @@
     state))
 
 (defn move-forward
-  [world entity]
-  (movement/try-move-by world entity (:facing-direction entity)))
+  [state entity-id]
+  (update state :world
+          #(movement/try-move-by % entity-id
+                                 (:facing-direction (world/get-object % entity-id)))))
 
 (defn handle-projectiles
   [state]
-  (actions/apply-to-objects state
-                            [:fireball move-forward]))
+  (actions/reduce-by-entity-type state :fireball move-forward))
 
 (defn handle-combat
   [state action]
@@ -40,7 +42,9 @@
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (handle-attacking @core/*state :fireball)
+  (-> @core/*state
+      (handle-attacking :fireball)
+      (handle-projectiles))
   (world/get-player (:world @core/*state))
   :rcf)
 

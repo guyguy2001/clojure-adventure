@@ -88,19 +88,22 @@
   :rcf)
 
 (defn despawn
-  [world [type key]]
-  (update-in world [:objects type]
-             #(do
-                (assert (entities-map/contains-entity % key))
-                (entities-map/remove-entity % key))))
+  [world [type key :as id]]
+  (let [pos (:pos (get-object world id))]
+    (-> world
+        (update-in [:objects type]
+                   #(do
+                      (assert (entities-map/contains-entity % key))
+                      (entities-map/remove-entity % key)))
+        (update :new-grid #(ids-grid/remove-id % pos id)))))
 
 (defn update-object
   [world identifier f & args]
-  (as-> world s
-    (apply update-in s (-get-absolute-object-path identifier) f args)
-    (if (nil? (get-in s (-get-absolute-object-path identifier)))
-      (despawn s identifier)
-      s)))
+  (let [path (-get-absolute-object-path identifier)
+        new-object (apply f (get-in world path) args)]
+    (if (nil? new-object)
+      (despawn world identifier)
+      (assoc-in world path new-object))))
 
 (defn dbg
   [x]
@@ -193,6 +196,17 @@
        (filter (fn [[k v]] (not= v []))))
   (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map object-entries) (:world state) "."))
   (s/redraw screen)
-  (def world (:world @core/*state))
-  (get-object-list world)
   :rcf)
+
+(defn is-cell-empty
+  [world pos]
+  (grid/is-cell-empty (:new-grid world) pos))
+
+(defn move-to
+  [world entity-path pos]
+  (let [old-pos (:pos (get-object world entity-path))]
+    (-> world
+        (update-object entity-path assoc :pos pos)
+        (update :new-grid #(-> %
+                               (ids-grid/remove-id old-pos entity-path)
+                               (ids-grid/insert-id pos entity-path))))))

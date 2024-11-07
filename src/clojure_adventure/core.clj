@@ -27,9 +27,17 @@
   {\x :interact
    \f :fireball})
 
+(defn player-movement
+  [state player-id direction]
+  (if (not= direction nil)
+    (update state :world
+            movement/try-move-by player-id direction)
+    state))
+
 (defn enemy-turn
-  [world enemy]
-  (movement/try-move-by world enemy (rand-nth vec2/cardinal-directions)))
+  [state enemy-id]
+  (update state :world
+          movement/try-move-by enemy-id (rand-nth vec2/cardinal-directions)))
 
 
 (defn get-interaction-focus-target
@@ -105,14 +113,9 @@
     ; Or maybe abstract it completely so this part of the code can't fuck it up?
     (-> state_
         (update :notifications notifications/clear-notifications)
-        (actions/apply-to-objects
-         [:players (fn [{:keys [world]} player]
-                     (if (not= direction nil)
-                       (movement/try-move-by world player direction)
-                       player))
-
-          :enemies
-          (fn [{:keys [world]} enemy] (enemy-turn world enemy))])
+        (actions/reduce-by-entity-type :players (fn [state player]
+                                                  (player-movement state player direction)))
+        (actions/reduce-by-entity-type :enemies enemy-turn)
 
         (actions/update-with-context
          :interaction-focus
@@ -153,7 +156,10 @@
             (ui/draw-screen @*screen @*state)
             (catch Exception e
               (binding [*out* *err*]
-                (println "Encountered exception while running the turn:" e))))
+                (println "Encountered exception while running the turn:" e)))
+            (catch AssertionError e
+              (binding [*out* *err*]
+                (println "Encountered assertion error while running the turn:" e))))
           (recur))))))
 
 (defn get-initial-world

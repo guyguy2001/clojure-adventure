@@ -1,11 +1,12 @@
 (ns clojure-adventure.movement
-  (:require [clojure-adventure.grid :as grid]
-            [clojure-adventure.vec2 :as vec2]))
+  (:require [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.world :as world]))
 
 (defn try-move-by
-  [world entity by]
-  (let [entity (assoc entity :facing-direction by)
-        moved (update entity :pos vec2/add by)]
-    (if (= (grid/get-grid (:base-grid world) (:pos moved)) grid/empty-cell)
-      moved
-      entity)))
+  [world entity-id by]
+  (let [world (world/update-object world entity-id
+                                   assoc :facing-direction by)
+        target (vec2/add (:pos (world/get-object world entity-id)) by)]
+    (if (world/is-cell-empty world target)
+      (world/move-to world entity-id target)
+      world)))

@@ -48,18 +48,24 @@
             [:enemies 4]]))))
 
 (defn -with-pos
-  [x]
-  {:value x
-   :pos (vec2/vec2 0 0)})
+  ([x]
+   {:value x
+    :pos (vec2/vec2 0 0)})
+  ([x [type _ :as id]]
+   {:value x
+    :pos (vec2/vec2 0 0)
+    :type type
+    :id id}))
+
 (deftest get-object-list-test
   (testing "Testing sanity usage"
     (is (=
          (get-object-list (-> (new-world [[[]]])
                               (spawn-objects :players (map -with-pos [:a :b]))
                               (spawn-objects :enemies [(-with-pos :c)])))
-         [[[:players 0] (-with-pos :a)]
-          [[:players 1] (-with-pos :b)]
-          [[:enemies 0] (-with-pos :c)]]))))
+         [[[:players 0] (-with-pos :a [:players 0])]
+          [[:players 1] (-with-pos :b [:players 1])]
+          [[:enemies 0] (-with-pos :c [:enemies 0])]]))))
 
 (deftest get-object-at-pos-test
   (is (= (get-object-at-pos world (vec2/vec2 53 15))

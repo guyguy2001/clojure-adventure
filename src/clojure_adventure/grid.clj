@@ -70,11 +70,6 @@
 
 (def empty-cell ".") ; TODO: Move this to population.clj, make empty cells be represented as nil or smth
 
-(defn old-get-empty-spaces
-  [grid]
-  (let [positions (for [x (range (width grid)) y (range (height grid))] [x y])]
-    (vec (filter (fn [[x y]] (= (get-in grid [y x]) empty-cell)) positions))))
-
 
 (;; Layers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -176,6 +171,10 @@
   (map-entries-grid (fn [x y] [x y]) [[1 2] [3 4]])
   (map-grid (fn [x] [x]) [[1 2] [3 4]])
   :rcf)
+
+(defn is-cell-empty
+  [ids-grid pos]
+  (= (get-grid ids-grid pos) []))
 
 (defn get-empty-spaces
   "Accepts a gird of vecs of ids, and returns the positions with empty cells."
