@@ -1,9 +1,11 @@
 (ns clojure-adventure.world-test
-  (:require [clojure-adventure.grid :as grid]
-            [clojure-adventure.population :as population]
-            [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.world :refer :all]
-            [clojure.test :refer :all]))
+  (:require
+   [clojure-adventure.grid :as grid]
+   [clojure-adventure.parameters :as parameters]
+   [clojure-adventure.population :as population]
+   [clojure-adventure.vec2 :as vec2]
+   [clojure-adventure.world :refer :all]
+   [clojure.test :refer :all]))
 
 (def initial-player [{:pos {:x 53 :y 15} :symbol "@"}])
 (def initial-enemies [{:name nil, :pos {:x 80, :y 20}, :symbol "X"}
@@ -13,7 +15,7 @@
                       {:name nil, :pos {:x 81, :y 4}, :symbol "X"}])
 
 (def world
-  (-> (new-world population/starting-map)
+  (-> (new-world parameters/world-width parameters/world-height parameters/background-character)
       (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
       (population/remove-all-in-cell (vec2/vec2 50 15))
       (spawn-objects :players initial-player)
@@ -59,7 +61,7 @@
 (deftest get-object-list-test
   (testing "Testing sanity usage"
     (is (=
-         (get-object-list (-> (new-world [[[]]])
+         (get-object-list (-> (new-world 1 1 ".")
                               (spawn-objects :players (map -with-pos [:a :b]))
                               (spawn-objects :enemies [(-with-pos :c)])))
          [[[:players 0] (-with-pos :a [:players 0])]

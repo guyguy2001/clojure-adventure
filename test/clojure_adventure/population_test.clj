@@ -6,7 +6,8 @@
    [clojure-adventure.world :as world]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test :refer [deftest is testing]]
+   [clojure-adventure.parameters :as parameters]))
 
 (def initial-player [{:pos {:x 53 :y 15} :symbol "@"}])
 (def initial-enemies [{:name nil, :pos {:x 80, :y 20}, :symbol "X"}
@@ -16,7 +17,7 @@
                       {:name nil, :pos {:x 81, :y 4}, :symbol "X"}])
 
 (def state
-  {:world (-> (world/new-world population/starting-map)
+  {:world (-> (world/new-world parameters/world-width parameters/world-height parameters/background-character)
               (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
               (population/remove-all-in-cell (vec2/vec2 50 15))
               (world/spawn-objects :players initial-player)

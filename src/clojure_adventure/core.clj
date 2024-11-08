@@ -1,14 +1,16 @@
 (ns clojure-adventure.core
   (:gen-class)
-  (:require [clojure-adventure.actions :as actions]
-            [clojure-adventure.combat :as combat]
-            [clojure-adventure.grid :as grid]
-            [clojure-adventure.movement :as movement]
-            [clojure-adventure.notifications :as notifications]
-            [clojure-adventure.population :as population]
-            [clojure-adventure.ui :as ui]
-            [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.world :as world]))
+  (:require
+   [clojure-adventure.actions :as actions]
+   [clojure-adventure.combat :as combat]
+   [clojure-adventure.grid :as grid]
+   [clojure-adventure.movement :as movement]
+   [clojure-adventure.notifications :as notifications]
+   [clojure-adventure.parameters :as parameters]
+   [clojure-adventure.population :as population]
+   [clojure-adventure.ui :as ui]
+   [clojure-adventure.vec2 :as vec2]
+   [clojure-adventure.world :as world]))
 (require '[nrepl.server :refer [start-server stop-server]])
 
 (defn dbg
@@ -164,7 +166,7 @@
 
 (defn get-initial-world
   []
-  (-> (world/new-world 100 30 ".")
+  (-> (world/new-world parameters/world-width parameters/world-height parameters/background-character)
       (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
       (population/remove-all-in-cell (vec2/vec2 50 15))
       (population/spawn-at-random-empty-cells :tree {:symbol "^"} 10)))

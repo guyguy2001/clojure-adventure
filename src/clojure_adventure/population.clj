@@ -32,9 +32,9 @@
       (populate-vertical-line type object (vec2/add top-left (vec2/vec2 (dec size) 0)) size)))
 
 (comment
-  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 0 :y 1} 1)
-  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 0 :y 0} 1)
-  (populate-square (world/new-world [[["-"]]]) :wall {:symbol "#"} {:x 1 :y 1} 1)
+  (populate-square (world/new-world 1 1 "-") :wall {:symbol "#"} {:x 0 :y 1} 1)
+  (populate-square (world/new-world 1 1 "-") :wall {:symbol "#"} {:x 0 :y 0} 1)
+  (populate-square (world/new-world 1 1 "-") :wall {:symbol "#"} {:x 1 :y 1} 1)
   :rcf)
 
 (defn get-random-empty-cell
@@ -43,7 +43,7 @@
 
 (comment
   (require '[clojure-adventure.core :as core])
-  (get-random-empty-cell (world/new-world starting-map))
+  (get-random-empty-cell (core/get-initial-world))
   :rcf)
 
 ; TODO: This is incredibly unoptimized. I should just ask for N empty cells prolly?
