@@ -6,12 +6,13 @@
    [clojure-adventure.world-impl.ids-grid :as ids-grid]))
 
 
+; TODO: Only change hte parameters in this commit, make base-grid be generated here, and in the next commit make it unneeded
+
 (defn new-world
-  [base-grid]
-  {:base-grid base-grid
+  [width height empty-cell-symbol]
+  {:base-grid (grid/grid-of width height empty-cell-symbol)
     ; The goal is to get this to be the same I think
-   :new-grid (vec (repeat (grid/height base-grid)
-                          (vec (repeat (grid/width base-grid) []))))
+   :new-grid (grid/grid-of width height [])
    :objects {}})
 
 ; Todo: currently everything takes `state`, and that's gonna bite me in the ass if I have...

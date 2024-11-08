@@ -164,12 +164,11 @@
 
 (defn get-initial-world
   []
-  (-> (world/new-world population/starting-map)
+  (-> (world/new-world 100 30 ".")
       (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
       (population/remove-all-in-cell (vec2/vec2 50 15))
       (population/spawn-at-random-empty-cells :tree {:symbol "^"} 10)))
 
-; TODO: This still accesses :world :base-grid
 (def initial-state
   {:world (-> (get-initial-world)
               (world/spawn-objects :players [{:pos {:x 53 :y 15}
@@ -195,7 +194,7 @@
   (get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
   (map (partial world/get-object-at-pos (:world state))
-       (grid/get-neighboaring-cells (get-in state [:world :base-grid]) (vec2/vec2 51 12)))
+       (grid/get-neighboaring-cells (get-in state [:world :new-grid]) (vec2/vec2 51 12)))
 
   (world/get-object-at-pos (:world state) (vec2/vec2 51 13))
 

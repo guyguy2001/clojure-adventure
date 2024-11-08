@@ -18,6 +18,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  )
 
+(defn grid-of
+  [width height value]
+  (vec (repeat height (vec (repeat width value)))))
+
+(comment
+  (grid-of 5 3 "foo")
+  :rcf)
+
 (defn width
   [grid]
   (if-let [row (get grid 0)]
@@ -66,8 +74,6 @@
       (apply update-in grid [y x] f args)
       (throw
        (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
-
-(def empty-cell ".") ; TODO: Move this to population.clj, make empty cells be represented as nil or smth
 
 
 (;; Layers

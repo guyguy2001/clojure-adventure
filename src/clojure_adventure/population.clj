@@ -5,9 +5,6 @@
             [clojure-adventure.world :as world]))
 
 
-(def starting-map (vec (repeat 30 (vec (repeat 100 grid/empty-cell)))))
-
-
 ; populate-vertical-line is my original implementation, and horizontal-line is based on suggestions from slack.
 ; It doesn't really use the vector 2 abstraction, but is cleaner and probably simpler to understand
 (defn populate-horizontal-line

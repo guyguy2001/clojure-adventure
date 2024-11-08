@@ -49,8 +49,8 @@ never have both a world and an entity (not sure if that's a good convention or n
 - Implement the new grid into the main code
 
   - Fix target selection (broken because now non-intractable objects are also in there)
-  - Fix collision
-  - Update new grid when moving
+  - DONE - Fix collision
+  - DONE - Update new grid when moving
   - Remove all instances of :base-grid
   - Rename :new-grid
   - See where :new-grid is used directly, if there's a good alternative
