@@ -82,7 +82,7 @@
   [screen state]
   (let [world (:world state)
         grid (grid/combine-layers (:base-grid world)
-                                  (world/get-object-list2 world))]
+                                  (world/get-object-list world))]
     (draw-grid screen grid)))
 
 (defn render-bar

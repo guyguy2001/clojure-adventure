@@ -112,18 +112,6 @@
   x)
 
 (defn get-object-list
-  "Transforms {:players [a b] :enemies [d]} to ([[:players 0] a] [[:players 1] b] [[:enemies 0] d])
-   [[:enemies 0] d] is basically a `[deep-key val]` map entry.
-   
-   DEPRECATED in favor of get-object-list2"
-  [world]
-  (->> (:objects world)
-       (keys)
-       (map #(get-paths-of-type world %))
-       (apply concat)
-       (map (fn [path] [path (get-object world path)]))))
-
-(defn get-object-list2
   "Transforms {:players [a b] :enemies [d]} to (a b d)"
   [world]
   (->> (:objects world)
@@ -134,14 +122,11 @@
 
 
 (comment
-  (get-object-list2 {:objects {:players (entities-map/make-entities-map [:a :b])
-                               :enemies (entities-map/make-entities-map [:c])}})
-  :rcf)
+  (get-object-list {:objects {:players (entities-map/make-entities-map [:a :b])
+                              :enemies (entities-map/make-entities-map [:c])}})
 
-(comment
   (require '[clojure-adventure.core :as core])
   (get-object-list (:world core/initial-state))
-  (get-object-list2 (:world core/initial-state))
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
@@ -149,7 +134,7 @@
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
 (defn get-objects-at-pos
   [world pos]
-  (filter #(= pos (:pos %)) (get-object-list2 world)))
+  (filter #(= pos (:pos %)) (get-object-list world)))
 
 (defn get-object-at-pos
   [world pos]
@@ -191,7 +176,7 @@
 (defn ensure-invariants
   [world]
   ; Make sure that all entities have an id, a type, and a pos
-  (doseq [entity (get-object-list2 world)]
+  (doseq [entity (get-object-list world)]
     (assert (not (nil? (:pos entity))) (format "Entity missing an :pos - %s" entity))
     (assert (not (nil? (:id entity))) (format "Entity missing an :id - %s" entity))
     (assert (not (nil? (:type entity))) (format "Entity missing an :type - %s" entity)))
@@ -208,7 +193,7 @@
                   (s/stop (var-get #'screen)))
                 (ui/setup-screen {:font-size 8})))
   (def state @core/*state)
-  (def objects (get-object-list2 (:world state)))
+  (def objects (get-object-list (:world state)))
   (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
   (->> (grid/combine-to-grid starting-map objects)
        (grid/grid-entries)

@@ -61,9 +61,9 @@
 (deftest get-object-list-test
   (testing "Testing sanity usage"
     (is (=
-         (get-object-list2 (-> (new-world 1 1 ".")
-                               (spawn-objects :players (map -with-pos [:a :b]))
-                               (spawn-objects :enemies [(-with-pos :c)])))
+         (get-object-list (-> (new-world 1 1 ".")
+                              (spawn-objects :players (map -with-pos [:a :b]))
+                              (spawn-objects :enemies [(-with-pos :c)])))
          [(-with-pos :a [:players 0])
           (-with-pos :b [:players 1])
           (-with-pos :c [:enemies 0])]))))
@@ -75,7 +75,7 @@
 
 (deftest system-test
   (testing "Testing get-object-list"
-    (let [objects (get-object-list2 world)
+    (let [objects (get-object-list world)
           players (filter #(= (get-in % [:id 0]) :players) objects)]
       (is (= players [{:pos {:x 53 :y 15} :symbol "@"
                        :id [:players 0] :type :players}]))))
@@ -90,7 +90,7 @@
           expected-enemies (mapv move-right initial-enemies)]
       ;; (is (= (get-in new-world [:world :objects :enemies])
       ;;        (mapv move-right initial-enemies))) ; TODO - revive this test. I'm not sure how to ask the question correctly. I probbaly need to store the entities map of the enemies at the start, instead of using the vec
-      (is (= (->> (get-object-list2 new-world)
+      (is (= (->> (get-object-list new-world)
                   (filter #(= :enemies (get-in % [:id 0])))
                   (map (fn [entity] (dissoc entity :type :id)))) ; dissoc is for removing keys which are harder to compare
              expected-enemies)))))

@@ -50,9 +50,9 @@
   (testing "Testing that rendering the initial state doesn't get regressed"
     (let [expected-render (load-edn "test/clojure_adventure/population_test_data/expected_combined_grid.edn")
           ; Taken from ui.clj:
-          actual-render (grid/combine-layers (:base-grid (:world state)) (world/get-object-list2 (:world state)))]
+          actual-render (grid/combine-layers (:base-grid (:world state)) (world/get-object-list (:world state)))]
       (is (= expected-render actual-render)))))
 
 (comment
-  (grid/combine-layers (:base-grid (:world state)) (world/get-object-list2 (:world state)))
+  (grid/combine-layers (:base-grid (:world state)) (world/get-object-list (:world state)))
   :rcf)
