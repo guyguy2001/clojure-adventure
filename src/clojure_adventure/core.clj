@@ -4,6 +4,7 @@
    [clojure-adventure.actions :as actions]
    [clojure-adventure.combat :as combat]
    [clojure-adventure.grid :as grid]
+   [clojure-adventure.interaction :as interaction]
    [clojure-adventure.movement :as movement]
    [clojure-adventure.notifications :as notifications]
    [clojure-adventure.parameters :as parameters]
@@ -40,29 +41,6 @@
   [state enemy-id]
   (update state :world
           movement/try-move-by enemy-id (rand-nth vec2/cardinal-directions)))
-
-
-(defn get-interaction-focus-target
-  ;todo: name
-  [state pos]
-  (first ; This first is to take the "key" of [[:players 0] { object data ... }]
-   (first (filter (comp not nil?)
-                  (world/get-neighboaring-objects (:world state) pos)))))
-
-
-(comment
-  (world/get-neighboaring-objects (:world initial-state) {:x 53 :y 15})
-  (get-interaction-focus-target
-   initial-state {:x 51, :y 14})
-  (world/get-object-list (:world initial-state))
-  (:pos (world/get-player (:world @*state)))
-  (:name (world/get-object (:world @*state) (:interaction-focus @*state)))
-  :rcf)
-
-
-(defn get-new-interaction-focus
-  [state]
-  (get-interaction-focus-target state (:pos (world/get-player (:world state)))))
 
 ; TODO: get despawning really working so that I have a limit on the copper
 ; Thought: I want to have the copper number flash green for a second after picking something up.
@@ -121,7 +99,7 @@
 
         (actions/update-with-context
          :interaction-focus
-         get-new-interaction-focus)
+         interaction/get-new-interaction-focus)
 
         (handle-mining
          action)
@@ -193,7 +171,7 @@
   objects
   (map #(= pos (:pos %)) objects)
   (world/get-object-at-pos (:world state) (vec2/vec2 51 13))
-  (get-interaction-focus-target state (vec2/vec2 51 12))
+  (interaction/get-interaction-focus-target state (vec2/vec2 51 12))
   (get-in state [:world :objects])
   (map (partial world/get-object-at-pos (:world state))
        (grid/get-neighboaring-cells (get-in state [:world :new-grid]) (vec2/vec2 51 12)))
@@ -232,7 +210,7 @@
   (get-in @*state [:world :objects :players :data 0])
   (keys @*state)
   (reset! *state initial-state)
-  (get-new-interaction-focus @*state)
+  (interaction/get-new-interaction-focus @*state)
   (:pos (world/get-player (:world @*state)))
   (combat/handle-combat @*state :fireball)
   (world/get-object (:world @*state) [:fireball 0])
