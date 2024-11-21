@@ -149,7 +149,7 @@
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
 (defn get-objects-at-pos
   [world pos]
-  (filter #(= pos (:pos (second %))) (get-object-list world)))
+  (filter #(= pos (:pos %)) (get-object-list2 world)))
 
 (defn get-object-at-pos
   [world pos]
@@ -191,7 +191,7 @@
 (defn ensure-invariants
   [world]
   ; Make sure that all entities have an id, a type, and a pos
-  (doseq [[id entity] (get-object-list world)]
+  (doseq [entity (get-object-list2 world)]
     (assert (not (nil? (:pos entity))) (format "Entity missing an :pos - %s" entity))
     (assert (not (nil? (:id entity))) (format "Entity missing an :id - %s" entity))
     (assert (not (nil? (:type entity))) (format "Entity missing an :type - %s" entity)))

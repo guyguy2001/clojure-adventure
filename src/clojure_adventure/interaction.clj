@@ -6,7 +6,7 @@
 
 (defn -get-nearest-interactable-entity
   [state pos]
-  (first ; This first is to take the "key" of [[:players 0] { object data ... }]
+  (:id
    (first (filter (comp not nil?)
                   (world/get-neighboaring-objects (:world state) pos)))))
 

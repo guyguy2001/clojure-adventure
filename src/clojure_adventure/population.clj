@@ -64,5 +64,4 @@
   (reduce (fn [world id]
             (world/despawn world id))
           world
-          ; The first is to get the entity id from the "entry"
-          (map first (world/get-objects-at-pos world pos))))
+          (map :id (world/get-objects-at-pos world pos))))
