@@ -123,13 +123,6 @@
        (apply concat)
        (map (fn [path] [path (get-object world path)]))))
 
-(comment
-  (entities-map/make-entities-map [:a :b])
-  (get-object-list {:objects {:players (entities-map/make-entities-map [:a :b])
-                              :enemies (entities-map/make-entities-map [:c])}})
-  :rcf)
-
-
 (defn get-object-list2
   "Transforms {:players [a b] :enemies [d]} to (a b d)"
   [world]
@@ -138,6 +131,12 @@
        (map #(get-paths-of-type world %))
        (apply concat)
        (map #(get-object world %))))
+
+
+(comment
+  (get-object-list2 {:objects {:players (entities-map/make-entities-map [:a :b])
+                               :enemies (entities-map/make-entities-map [:c])}})
+  :rcf)
 
 (comment
   (require '[clojure-adventure.core :as core])
