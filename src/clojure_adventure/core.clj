@@ -82,7 +82,7 @@
                      (handle-mining :interact)))
   (ui/draw-screen @*screen new-state)
   (get-in new-state [:world :objects :other])
-  (map second (world/get-object-list (:world new-state)))
+  (world/get-object-list2 (:world new-state))
   :rcf)
 
 (defn evaluate-turn

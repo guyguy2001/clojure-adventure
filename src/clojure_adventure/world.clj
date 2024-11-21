@@ -113,13 +113,15 @@
 
 (defn get-object-list
   "Transforms {:players [a b] :enemies [d]} to ([[:players 0] a] [[:players 1] b] [[:enemies 0] d])
-   [[:enemies 0] d] is basically a `[deep-key val]` map entry"
+   [[:enemies 0] d] is basically a `[deep-key val]` map entry.
+   
+   DEPRECATED in favor of get-object-list2"
   [world]
   (->> (:objects world)
        (keys)
        (map #(get-paths-of-type world %))
        (apply concat)
-       (map (fn [path] [path (get-object world path)])))) ; This didn't require changing - yay!
+       (map (fn [path] [path (get-object world path)]))))
 
 (comment
   (entities-map/make-entities-map [:a :b])
@@ -127,14 +129,20 @@
                               :enemies (entities-map/make-entities-map [:c])}})
   :rcf)
 
-(defn entries->entities
-  [entries-list]
-  (map second entries-list))
+
+(defn get-object-list2
+  "Transforms {:players [a b] :enemies [d]} to (a b d)"
+  [world]
+  (->> (:objects world)
+       (keys)
+       (map #(get-paths-of-type world %))
+       (apply concat)
+       (map #(get-object world %))))
 
 (comment
   (require '[clojure-adventure.core :as core])
   (get-object-list (:world core/initial-state))
-  (entries->entities (get-object-list (:world core/initial-state)))
+  (get-object-list2 (:world core/initial-state))
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
