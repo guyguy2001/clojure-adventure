@@ -142,14 +142,14 @@
 
 ; It seems like now I'm operating on Grid<Vec<world-identifiers>> as my source of truth, and also rendering a Grid<char>.
 (defn add-to-grid
-  [grid [path entity]]
+  [grid entity]
   (update-grid grid
                (:pos entity)
-               #(conj % path)))
+               #(conj % (:id entity))))
 
 (defn combine-to-grid
-  [starting-grid entries]
-  (reduce add-to-grid starting-grid entries))
+  [starting-grid entities]
+  (reduce add-to-grid starting-grid entities))
 
 (defn grid-entries
   [grid]
@@ -195,8 +195,8 @@
 
 (comment
   (def starting-grid [[[] []] [[] []]])
-  (def entries [[:player {:pos (vec2/vec2 0 1) :symbol "@"}]
-                [:enemy {:pos (vec2/vec2 1 0) :symbol "+"}]
-                [:foo {:pos (vec2/vec2 1 0) :symbol "+"}]])
-  (combine-to-grid starting-grid entries)
+  (def entities [{:pos (vec2/vec2 0 1) :symbol "@" :id :player}
+                 {:pos (vec2/vec2 1 0) :symbol "+" :id :enemy}
+                 {:pos (vec2/vec2 1 0) :symbol "+" :id :foo}])
+  (combine-to-grid starting-grid entities)
   :rcf)
