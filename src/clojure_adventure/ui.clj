@@ -105,12 +105,9 @@
 (defn draw-bottom-pane
   [screen state]
   (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 0.5))
-  (when-let [item-name (:name (world/get-object (:world state) (:interaction-focus state)))]
-    (draw-interaaction-prompt screen "X" item-name)))
-
-
-
-(def inventory {:wood 2 :iron 2})
+  (when-let [item (world/get-object (:world state) (:interaction-focus state))]
+    (let [item-name (or (:name item) (format "Unnamed %s" (:id item)))]
+      (draw-interaaction-prompt screen "X" item-name))))
 
 (defn show-item [type amount]
   (format "%s: %d" (name type) amount))
