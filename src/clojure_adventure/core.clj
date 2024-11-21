@@ -171,7 +171,7 @@
   objects
   (map #(= pos (:pos %)) objects)
   (world/get-object-at-pos (:world state) (vec2/vec2 51 13))
-  (interaction/get-interaction-focus-target state (vec2/vec2 51 12))
+  (interaction/-get-nearest-interactable-entity state (vec2/vec2 51 12))
   (get-in state [:world :objects])
   (map (partial world/get-object-at-pos (:world state))
        (grid/get-neighboaring-cells (get-in state [:world :new-grid]) (vec2/vec2 51 12)))

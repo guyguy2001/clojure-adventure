@@ -4,8 +4,7 @@
 
 
 
-(defn get-interaction-focus-target
-  ;todo: name
+(defn -get-nearest-interactable-entity
   [state pos]
   (first ; This first is to take the "key" of [[:players 0] { object data ... }]
    (first (filter (comp not nil?)
@@ -15,7 +14,7 @@
 (comment
   (require '[clojure-adventure.core :as core])
   (world/get-neighboaring-objects (:world core/initial-state) {:x 53 :y 15})
-  (get-interaction-focus-target
+  (-get-nearest-interactable-entity
    core/initial-state {:x 51, :y 14})
   (world/get-object-list (:world core/initial-state))
   (:pos (world/get-player (:world @core/*state)))
@@ -25,4 +24,4 @@
 
 (defn get-new-interaction-focus
   [state]
-  (get-interaction-focus-target state (:pos (world/get-player (:world state)))))
+  (-get-nearest-interactable-entity state (:pos (world/get-player (:world state)))))
