@@ -30,3 +30,11 @@
                               (= (get m1 %) (get m2 %)))
                          keys)))
   :rcf)
+
+(defmacro dbg-def
+  "Like def, but also returns the value of the new var."
+  [name val]
+  `(do
+     (def ~name ~val)
+     ~name))
+

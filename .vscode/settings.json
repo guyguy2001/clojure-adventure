@@ -1,6 +1,7 @@
 {
   // "calva.autoConnectRepl": true,
-  "terminal.integrated.defaultProfile.windows": "Git Bash"
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "editor.lineNumbers": "on"
   // "calva.autoStartRepl": true,
   // "calva.autoConnectRepl": true
 }

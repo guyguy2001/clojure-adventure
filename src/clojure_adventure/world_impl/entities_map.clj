@@ -37,7 +37,7 @@
 
 (defn make-entities-map
   [entities]
-  (reduce insert -empty-map entities))
+  (reduce (fn [map entity] (first (insert map entity))) -empty-map entities))
 
 (defn entries-keys
   [map]

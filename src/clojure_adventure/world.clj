@@ -122,8 +122,19 @@
        (map (fn [path] [path (get-object world path)])))) ; This didn't require changing - yay!
 
 (comment
+  (entities-map/make-entities-map [:a :b])
   (get-object-list {:objects {:players (entities-map/make-entities-map [:a :b])
                               :enemies (entities-map/make-entities-map [:c])}})
+  :rcf)
+
+(defn entries->entities
+  [entries-list]
+  (map second entries-list))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (get-object-list (:world core/initial-state))
+  (entries->entities (get-object-list (:world core/initial-state)))
   :rcf)
 
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
