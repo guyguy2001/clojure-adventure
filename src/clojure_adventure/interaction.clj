@@ -3,11 +3,29 @@
    [clojure-adventure.world :as world]))
 
 
+(defn make-interactable
+  [entity]
+  (assoc entity :interactable true))
+
+(comment
+  (make-interactable {})
+  :rcf)
+
+(defn is-interactable
+  [entity]
+  (boolean (:interactable entity)))
+
+(comment
+  (is-interactable {})
+  (is-interactable {:interactable false})
+  (is-interactable (make-interactable {}))
+  (is-interactable nil)
+  :rcf)
 
 (defn -get-nearest-interactable-entity
   [state pos]
   (:id
-   (first (filter (comp not nil?)
+   (first (filter is-interactable
                   (world/get-neighboaring-objects (:world state) pos)))))
 
 

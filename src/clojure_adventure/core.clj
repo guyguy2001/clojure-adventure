@@ -155,9 +155,10 @@
                                               :facing-direction (vec2/vec2 1 0)
                                               :symbol "@"}])
               (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
-              (world/spawn-objects :other [{:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}])
+              (world/spawn-objects :other [(interaction/make-interactable
+                                            {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"})])
               (population/spawn-at-random-empty-cells
-               :copper {:symbol "C" :name "Copper Ore" :durability 5} 10))
+               :copper (interaction/make-interactable {:symbol "C" :name "Copper Ore" :durability 5}) 10))
    :interaction-focus nil
    :inventory {:iron 1 :copper 3}
    :notifications (notifications/new-queue)})

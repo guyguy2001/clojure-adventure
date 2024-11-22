@@ -48,7 +48,7 @@ never have both a world and an entity (not sure if that's a good convention or n
 - DONE Implement populations for the new grid
 - Implement the new grid into the main code
 
-  - Fix target selection (broken because now non-intractable objects are also in there)
+  - DONE - Fix target selection (broken because now non-intractable objects are also in there)
   - DONE - Fix collision
   - DONE - Update new grid when moving
   - Remove all instances of :base-grid
