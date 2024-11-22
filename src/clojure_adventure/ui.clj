@@ -78,10 +78,14 @@
           [x cell] (enumerate row)]
     (s/put-string screen x y cell (get color-map cell))))
 
+(defn -make-background-layer
+  [world]
+  (grid/grid-of (world/width world) (world/height world) (:background-symbol world)))
+
 (defn draw-world
   [screen state]
   (let [world (:world state)
-        grid (grid/combine-layers (:base-grid world)
+        grid (grid/combine-layers (-make-background-layer world)
                                   (world/get-object-list world))]
     (draw-grid screen grid)))
 

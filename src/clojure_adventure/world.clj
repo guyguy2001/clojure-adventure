@@ -9,9 +9,8 @@
 ; TODO: Only change hte parameters in this commit, make base-grid be generated here, and in the next commit make it unneeded
 
 (defn new-world
-  [width height empty-cell-symbol]
-  {:base-grid (grid/grid-of width height empty-cell-symbol)
-    ; The goal is to get this to be the same I think
+  [width height background-symbol]
+  {:background-symbol background-symbol
    :new-grid (grid/grid-of width height [])
    :objects {}})
 
@@ -129,6 +128,22 @@
   (get-object-list (:world core/initial-state))
   :rcf)
 
+
+(defn width
+  [world]
+  (grid/width (:new-grid world)))
+
+(defn height
+  [world]
+  (grid/height (:new-grid world)))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (width (:world core/initial-state))
+  (height (:world core/initial-state))
+  :rcf)
+
+
 ; TODO: I need to create an abstraction of the grid and the objects on it (layers).
 ; both for performance (O(1) access from xy to object), and also logical abstraction
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
@@ -148,7 +163,7 @@
 (defn get-neighboaring-objects
   [world pos]
   (map #(get-object-at-pos world %)
-       (grid/get-neighboaring-cells (:base-grid world) pos)))
+       (grid/get-neighboaring-cells (:new-grid world) pos)))
 
 (comment
   (require '[clojure-adventure.core :as core])

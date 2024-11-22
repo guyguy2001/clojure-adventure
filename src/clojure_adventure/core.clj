@@ -164,7 +164,9 @@
    :notifications (notifications/new-queue)})
 
 (comment
-  (reset! *state initial-state)
+  (do
+    (reset! *state initial-state)
+    (ui/draw-screen @*screen @*state))
   (def state initial-state)
   state
   (def objects (get-in state [:objects]))

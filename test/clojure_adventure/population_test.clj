@@ -39,6 +39,11 @@
     (catch RuntimeException e
       (printf "Error parsing edn file '%s': %s\n" source (.getMessage e)))))
 
+(defn -make-background-layer
+  ; Taken from ui.clj:
+  [world]
+  (grid/grid-of (world/width world) (world/height world) (:background-symbol world)))
+
 ; NOTE: This seems to only check the hard-coded ascii functions, not the place-enemies functions.
 ; I should get into seeded randomness...
 (deftest initial-map-generation-test
@@ -50,9 +55,9 @@
   (testing "Testing that rendering the initial state doesn't get regressed"
     (let [expected-render (load-edn "test/clojure_adventure/population_test_data/expected_combined_grid.edn")
           ; Taken from ui.clj:
-          actual-render (grid/combine-layers (:base-grid (:world state)) (world/get-object-list (:world state)))]
+          actual-render (grid/combine-layers (-make-background-layer (:world state)) (world/get-object-list (:world state)))]
       (is (= expected-render actual-render)))))
 
 (comment
-  (grid/combine-layers (:base-grid (:world state)) (world/get-object-list (:world state)))
+  (grid/combine-layers (-make-background-layer (:world state)) (world/get-object-list (:world state)))
   :rcf)
