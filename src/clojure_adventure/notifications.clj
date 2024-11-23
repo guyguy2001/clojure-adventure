@@ -2,4 +2,4 @@
 
 (defn new-queue [] {})
 
-(defn clear-notifications [notifications] {})
+(defn clear-notifications [_notifications] {})

@@ -118,7 +118,7 @@
 
      :enemies
      (fn [{:keys [world]} enemy] (map #(enemy-turn world enemy)))])
-  (actions/apply-to-objects state actions)
+  ;; (actions/apply-to-objects state actions)
   initial-state
   :rcf)
 

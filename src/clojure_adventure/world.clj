@@ -212,7 +212,7 @@
   (def starting-map (vec (repeat 30 (vec (repeat 100 [])))))
   (->> (grid/combine-to-grid starting-map objects)
        (grid/grid-entries)
-       (filter (fn [[k v]] (not= v []))))
+       (filter (fn [[_k v]] (not= v []))))
   (ui/draw-grid screen (render-grid (grid/combine-to-grid starting-map objects) (:world state) "."))
   (s/redraw screen)
   :rcf)
