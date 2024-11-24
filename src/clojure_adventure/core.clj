@@ -1,17 +1,17 @@
 (ns clojure-adventure.core
   (:gen-class)
-  (:require
-   [clojure-adventure.actions :as actions]
-   [clojure-adventure.combat :as combat]
-   [clojure-adventure.grid :as grid]
-   [clojure-adventure.interaction :as interaction]
-   [clojure-adventure.movement :as movement]
-   [clojure-adventure.notifications :as notifications]
-   [clojure-adventure.parameters :as parameters]
-   [clojure-adventure.population :as population]
-   [clojure-adventure.ui :as ui]
-   [clojure-adventure.vec2 :as vec2]
-   [clojure-adventure.world :as world]))
+  (:require [clojure-adventure.actions :as actions]
+            [clojure-adventure.combat :as combat]
+            [clojure-adventure.engine.collision :as collision]
+            [clojure-adventure.grid :as grid]
+            [clojure-adventure.interaction :as interaction]
+            [clojure-adventure.movement :as movement]
+            [clojure-adventure.notifications :as notifications]
+            [clojure-adventure.parameters :as parameters]
+            [clojure-adventure.population :as population]
+            [clojure-adventure.ui :as ui]
+            [clojure-adventure.vec2 :as vec2]
+            [clojure-adventure.world :as world]))
 (require '[nrepl.server :refer [start-server stop-server]])
 
 (defn dbg
@@ -145,20 +145,24 @@
 (defn get-initial-world
   []
   (-> (world/new-world parameters/world-width parameters/world-height parameters/background-character)
-      (population/populate-square :wall {:symbol "#"} {:x 50 :y 10} 10)
+      (population/populate-square :wall (-> {:symbol "#"} (collision/make-solid)) {:x 50 :y 10} 10)
       (population/remove-all-in-cell (vec2/vec2 50 15))
-      (population/spawn-at-random-empty-cells :tree {:symbol "^"} 10)))
+      (population/spawn-at-random-empty-cells :tree (-> {:symbol "^"} (collision/make-solid)) 10)))
 
+; TODO: If I'm going the component route, I'm pretty sure I can just have interactable and solit be data, no need for "make" functions
 (def initial-state
   {:world (-> (get-initial-world)
               (world/spawn-objects :players [{:pos {:x 53 :y 15}
                                               :facing-direction (vec2/vec2 1 0)
                                               :symbol "@"}])
               (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
-              (world/spawn-objects :other [(interaction/make-interactable
-                                            {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"})])
+              (world/spawn-objects :other [(-> {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}
+                                               (interaction/make-interactable)
+                                               (collision/make-solid))])
               (population/spawn-at-random-empty-cells
-               :copper (interaction/make-interactable {:symbol "C" :name "Copper Ore" :durability 5}) 10))
+               :copper (-> {:symbol "C" :name "Copper Ore" :durability 5}
+                           (interaction/make-interactable)
+                           (collision/make-solid)) 10))
    :interaction-focus nil
    :inventory {:iron 1 :copper 3}
    :notifications (notifications/new-queue)})
@@ -209,7 +213,7 @@
   (stop-server server))
 
 (comment
-  (-main)
+  (future (-main)) ; :)
   (get-in @*state [:world :objects :players :data 0])
   (keys @*state)
   (reset! *state initial-state)
