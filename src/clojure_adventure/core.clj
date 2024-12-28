@@ -22,9 +22,13 @@
 
 (def direction-by-input
   {:left vec2/left
+   \a vec2/left
    :right vec2/right
+   \d vec2/right
    :up vec2/up
-   :down vec2/down})
+   \w vec2/up
+   :down vec2/down
+   \s vec2/down})
 
 (def action-by-input
   {\x :interact
