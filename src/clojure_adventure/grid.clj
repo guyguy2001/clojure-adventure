@@ -75,6 +75,15 @@
       (throw
        (ex-info (format "Grid index out of bounds. [%d %d]" x y) {:type :grid-out-of-bounds :x x :y y})))))
 
+(defn keys-grid
+  [grid]
+  (for [x (range (width grid))
+        y (range (height grid))]
+    (vec2/vec2 x y)))
+
+(comment
+  (keys-grid (grid-of 5 3 "foo"))
+  :rcf)
 
 (;; Layers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

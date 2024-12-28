@@ -105,6 +105,15 @@
       (despawn world identifier)
       (assoc-in world path new-object))))
 
+; TODO: rename?
+(defn positions
+  [world]
+  (grid/keys-grid (:new-grid world)))
+
+(comment
+  (positions (new-world 5 3 "?"))
+  :rcf)
+
 (defn dbg
   [x]
   (println x)

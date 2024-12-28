@@ -4,7 +4,8 @@
 
 **Current state**
 The fireballs get stuck when hitting a wall.
-They are solid, and don't disappear, and don't deal damage.
+~~They are solid, and don't disappear, and don't deal damage.~~
+They don't deal damage.
 
 **Desired state**
 
@@ -31,3 +32,5 @@ What I need:
 - When trying to move, being able to query whether there's a solid object where I'm trying to go
 - For things I'm interesting in knowing about their collisions (e.g. fireballs), be able to query / call a callback when such collisions happen
   - Ideally, allow me to stop the events if a fireball hits multiple things on the same tile but I despawned it first (for situations where this is how I'd like it to work.)
+
+I think I should have 2 parts: The collision calculation, and the collision notification.
