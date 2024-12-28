@@ -1,4 +1,4 @@
-(ns clojure-adventure.combat
+(ns clojure-adventure.content.combat
   (:require [clojure-adventure.actions :as actions]
             [clojure-adventure.movement :as movement]
             [clojure-adventure.world :as world]))

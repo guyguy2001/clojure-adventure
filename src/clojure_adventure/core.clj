@@ -1,7 +1,7 @@
 (ns clojure-adventure.core
   (:gen-class)
   (:require [clojure-adventure.actions :as actions]
-            [clojure-adventure.combat :as combat]
+            [clojure-adventure.content.combat :as combat]
             [clojure-adventure.engine.collision :as collision]
             [clojure-adventure.grid :as grid]
             [clojure-adventure.interaction :as interaction]
