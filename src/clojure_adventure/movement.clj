@@ -5,10 +5,9 @@
 
 (defn try-move-by
   [state entity-id by]
-  (let [world (:world state)
-        world (world/update-object world entity-id
-                                   assoc :facing-direction by)
-        target (vec2/add (:pos (world/get-object world entity-id)) by)]
-    (if (not (collision/is-pos-solid? world target))
-      (assoc state :world (world/move-to world entity-id target))
-      (assoc state :world world))))
+  (let [state (update state :world #(world/update-object % entity-id
+                                                         assoc :facing-direction by))
+        target (vec2/add (:pos (world/get-object (:world state) entity-id)) by)]
+    (if (not (collision/is-pos-solid? state target))
+      (update state :world #(world/move-to % entity-id target))
+      state)))
