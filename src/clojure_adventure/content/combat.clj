@@ -26,9 +26,8 @@
 
 (defn move-forward
   [state entity-id]
-  (update state :world
-          #(movement/try-move-by % entity-id
-                                 (:facing-direction (world/get-object % entity-id)))))
+  (movement/try-move-by state entity-id
+                        (:facing-direction (world/get-object (:world state) entity-id))))
 
 (defn handle-projectiles
   [state]

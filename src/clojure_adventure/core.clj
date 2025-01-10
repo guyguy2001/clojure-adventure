@@ -37,14 +37,12 @@
 (defn player-movement
   [state player-id direction]
   (if (not= direction nil)
-    (update state :world
-            movement/try-move-by player-id direction)
+    (movement/try-move-by state player-id direction)
     state))
 
 (defn enemy-turn
   [state enemy-id]
-  (update state :world
-          movement/try-move-by enemy-id (rand-nth vec2/cardinal-directions)))
+  (movement/try-move-by state enemy-id (rand-nth vec2/cardinal-directions)))
 
 ; TODO: get despawning really working so that I have a limit on the copper
 ; Thought: I want to have the copper number flash green for a second after picking something up.
@@ -109,15 +107,16 @@
          action)
 
         (combat/handle-combat action)
+        ;; (collision/update-collisions)
         (update :world world/ensure-invariants))))
 
 (comment
   (def state initial-state)
   (def direction (vec2/vec2 1 0))
   (def actions
-    [:player (fn [{:keys [world]} player]
+    [:player (fn [state player]
                (if (not= direction nil)
-                 (movement/try-move-by world player direction)
+                 (movement/try-move-by state player direction)
                  player))
 
      :enemies

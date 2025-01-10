@@ -4,10 +4,11 @@
             [clojure-adventure.engine.collision :as collision]))
 
 (defn try-move-by
-  [world entity-id by]
-  (let [world (world/update-object world entity-id
+  [state entity-id by]
+  (let [world (:world state)
+        world (world/update-object world entity-id
                                    assoc :facing-direction by)
         target (vec2/add (:pos (world/get-object world entity-id)) by)]
     (if (not (collision/is-pos-solid? world target))
-      (world/move-to world entity-id target)
-      world)))
+      (assoc state :world (world/move-to world entity-id target))
+      (assoc state :world world))))
