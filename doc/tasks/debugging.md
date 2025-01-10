@@ -1,0 +1,1 @@
+- Add an way to color a single cell on screen, to see where a certain position is (maybe color the background?)

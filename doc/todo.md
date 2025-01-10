@@ -57,3 +57,6 @@ never have both a world and an entity (not sure if that's a good convention or n
 
 - Put the IDs of objects into the objects themselves
 - Retire the functions that return both of them (unless they're also needed for some reason)
+
+- I probably wnat to make all world/ functions accept a state.
+  - I can have a macro or something that will allow them to either receive a world or a state for now, which will allow me to transition easily.
