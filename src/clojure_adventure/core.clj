@@ -107,7 +107,7 @@
          action)
 
         (combat/handle-combat action)
-        ;; (collision/update-collisions)
+        (collision/update-collisions)
         (update :world world/ensure-invariants))))
 
 (comment
@@ -154,21 +154,22 @@
 
 ; TODO: If I'm going the component route, I'm pretty sure I can just have interactable and solit be data, no need for "make" functions
 (def initial-state
-  {:world (-> (get-initial-world)
-              (world/spawn-objects :players [{:pos {:x 53 :y 15}
-                                              :facing-direction (vec2/vec2 1 0)
-                                              :symbol "@"}])
-              (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
-              (world/spawn-objects :other [(-> {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}
-                                               (interaction/make-interactable)
-                                               (collision/make-solid))])
-              (population/spawn-at-random-empty-cells
-               :copper (-> {:symbol "C" :name "Copper Ore" :durability 5}
-                           (interaction/make-interactable)
-                           (collision/make-solid)) 10))
-   :interaction-focus nil
-   :inventory {:iron 1 :copper 3}
-   :notifications (notifications/new-queue)})
+  (-> {:world (-> (get-initial-world)
+                  (world/spawn-objects :players [{:pos {:x 53 :y 15}
+                                                  :facing-direction (vec2/vec2 1 0)
+                                                  :symbol "@"}])
+                  (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
+                  (world/spawn-objects :other [(-> {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}
+                                                   (interaction/make-interactable)
+                                                   (collision/make-solid))])
+                  (population/spawn-at-random-empty-cells
+                   :copper (-> {:symbol "C" :name "Copper Ore" :durability 5}
+                               (interaction/make-interactable)
+                               (collision/make-solid)) 10))
+       :interaction-focus nil
+       :inventory {:iron 1 :copper 3}
+       :notifications (notifications/new-queue)}
+      (into (collision/collision-state))))
 
 (comment
   (do
