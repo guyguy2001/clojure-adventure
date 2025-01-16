@@ -1,1 +1,2 @@
 - Add an way to color a single cell on screen, to see where a certain position is (maybe color the background?)
+- Copy the current initial-state into a `debug-state` that will stay stable for rcfs.

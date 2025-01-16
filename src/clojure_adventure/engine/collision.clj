@@ -34,7 +34,8 @@
 (defn collision-state
   []
   {:collisions {:new #{}
-                :ongoing #{}}})
+                :ongoing #{}
+                :pending #{}}})
 
 (defn new-collisions
   [state]
@@ -67,8 +68,18 @@
        (filter (comp not nil?))
        (set)))
 
+(defn -set-of-collisions-with
+  "Like -set-of-collisions, but there is 1 collider colliding into a cell"
+  [mover colliders]
+  (->> (for [e colliders] [[mover e] [e mover]])
+       (apply concat)
+       (set)))
+
 (comment
   (-set-of-collisions #{:a :b :c})
+  (-set-of-collisions-with :a #{:b :c})
+  (flatten [[1 2] [3 4]])
+  (flatten [[[1 2] [3 4]] [[1 2] [3 4]]])
   :rcf)
 
 (defn -collisions-in-pos
@@ -80,7 +91,7 @@
 ; TODO: Find a way to time this function; Maybe even to profile everything
 ; BIG TODO: I think this should include when objects try to go to a wall and collide with it???
    ; Might not be that bad actually
-(defn calculate-collisions
+(defn stationary-collisions
   "The results is a set of all of the collisions.
    Each collision is a tuple of 2 colliding items.
    Might make it a set of all of the colliding items if I drop the tuples idea."
@@ -97,20 +108,22 @@
                  (world/spawn-object :bar {:pos (vec2/vec2 5 5)})
                  (world/spawn-object :baz {:pos (vec2/vec2 5 5)})))
   (def pos (vec2/vec2 5 5))
-  (calculate-collisions {:world world})
+  (stationary-collisions {:world world})
   (-collisions-in-pos world pos)
   :rcf)
 
 (defn update-collisions
   [state]
-  (let [current-collisions (calculate-collisions state)
+  (let [current-collisions (set/union (get-in state [:collisions :pending])
+                                      (stationary-collisions state))
         past-collisions (set/union (get-in state [:collisions :new]) (get-in state [:collisions :ongoing]))
 
         new-collisions (set/difference current-collisions past-collisions)
         ongoing-collisions (set/difference current-collisions new-collisions)]
     (-> state
+        (assoc-in [:collisions :ongoing] ongoing-collisions)
         (assoc-in [:collisions :new] new-collisions)
-        (assoc-in [:collisions :ongoing] ongoing-collisions))))
+        (assoc-in [:collisions :pending] #{}))))
 
 (comment
   (require '[clojure-adventure.core :as core])
@@ -118,4 +131,16 @@
       (update-collisions)
       (update-collisions)
       :collisions)
+  :rcf)
+
+(defn notify-collision
+  ; TODO: document that this is just for stuff that doesn't get on the same clel
+  [state mover-id target-pos]
+  (let [colliders (map :id (world/get-objects-at-pos (:world state) target-pos))
+        collisions (-set-of-collisions-with mover-id colliders)]
+    (update-in state [:collisions :pending] set/union collisions)))
+
+(comment
+  (require '[clojure-adventure.core :refer [initial-state]])
+  (:collisions (notify-collision initial-state :foo {:x 50 :y 10}))
   :rcf)

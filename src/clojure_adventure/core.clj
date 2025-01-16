@@ -106,8 +106,10 @@
         (handle-mining
          action)
 
-        (combat/handle-combat action)
+        (combat/do-turn action)
         (collision/update-collisions)
+
+        (combat/post-physics)
         (update :world world/ensure-invariants))))
 
 (comment
