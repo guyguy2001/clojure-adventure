@@ -89,13 +89,15 @@
 
 (defn despawn
   [world [type key :as id]]
-  (let [pos (:pos (get-object world id))]
-    (-> world
-        (update-in [:objects type]
-                   #(do
-                      (assert (entities-map/contains-entity % key))
-                      (entities-map/remove-entity % key)))
-        (update :new-grid #(ids-grid/remove-id % pos id)))))
+  (if (not (entities-map/contains-entity (get-in world [:objects type]) key))
+    world ; TODO: read up on what to do if I try to despawn an object twice.
+    (let [pos (:pos (get-object world id))]
+      (-> world
+          (update-in [:objects type]
+                     #(do
+                        (assert (entities-map/contains-entity % key))
+                        (entities-map/remove-entity % key)))
+          (update :new-grid #(ids-grid/remove-id % pos id))))))
 
 (defn update-object
   [world identifier f & args]
