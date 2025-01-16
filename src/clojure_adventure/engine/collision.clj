@@ -96,10 +96,10 @@
    Each collision is a tuple of 2 colliding items.
    Might make it a set of all of the colliding items if I drop the tuples idea."
   [state]
-  (reduce (fn [collisions pos]
-            (into collisions (-collisions-in-pos (:world state) pos)))
-          #{}
-          (world/positions (:world state))))
+  (->> (world/positions (:world state))
+       (map (fn [pos] (-collisions-in-pos (:world state) pos)))
+       (apply concat)
+       (set)))
 
 (comment
   (require '[clojure-adventure.core :as core])

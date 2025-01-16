@@ -160,7 +160,8 @@
 ; TODO: There are 2 confliction ideas of `objects`: one is {:players [...] :enemies [...]}, and one is just a list of all the objects in the world.
 (defn get-objects-at-pos
   [world pos]
-  (filter #(= pos (:pos %)) (get-object-list world)))
+  (->> (grid/get-grid (:new-grid world) pos)
+       (map #(get-object world %))))
 
 (defn get-object-at-pos
   [world pos]
