@@ -1,17 +1,19 @@
 (ns clojure-adventure.core
   (:gen-class)
-  (:require [clojure-adventure.actions :as actions]
-            [clojure-adventure.content.combat :as combat]
-            [clojure-adventure.engine.collision :as collision]
-            [clojure-adventure.grid :as grid]
-            [clojure-adventure.interaction :as interaction]
-            [clojure-adventure.movement :as movement]
-            [clojure-adventure.notifications :as notifications]
-            [clojure-adventure.parameters :as parameters]
-            [clojure-adventure.population :as population]
-            [clojure-adventure.ui :as ui]
-            [clojure-adventure.vec2 :as vec2]
-            [clojure-adventure.world :as world]))
+  (:require
+   [clojure-adventure.actions :as actions]
+   [clojure-adventure.content.combat :as combat]
+   [clojure-adventure.content.health :as health]
+   [clojure-adventure.engine.collision :as collision]
+   [clojure-adventure.grid :as grid]
+   [clojure-adventure.interaction :as interaction]
+   [clojure-adventure.movement :as movement]
+   [clojure-adventure.notifications :as notifications]
+   [clojure-adventure.parameters :as parameters]
+   [clojure-adventure.population :as population]
+   [clojure-adventure.ui :as ui]
+   [clojure-adventure.vec2 :as vec2]
+   [clojure-adventure.world :as world]))
 (require '[nrepl.server :refer [start-server stop-server]])
 
 (defn dbg
@@ -42,7 +44,9 @@
 
 (defn enemy-turn
   [state enemy-id]
-  (movement/try-move-by state enemy-id (rand-nth vec2/cardinal-directions)))
+  (if (= 0 (rand-int 10))
+    (combat/fireball-attack state (world/get-object (:world state) enemy-id))
+    (movement/try-move-by state enemy-id (rand-nth vec2/cardinal-directions))))
 
 ; TODO: get despawning really working so that I have a limit on the copper
 ; Thought: I want to have the copper number flash green for a second after picking something up.
@@ -157,9 +161,10 @@
 ; TODO: If I'm going the component route, I'm pretty sure I can just have interactable and solit be data, no need for "make" functions
 (def initial-state
   (-> {:world (-> (get-initial-world)
-                  (world/spawn-objects :players [{:pos {:x 53 :y 15}
-                                                  :facing-direction (vec2/vec2 1 0)
-                                                  :symbol "@"}])
+                  (world/spawn-objects :players [(-> {:pos {:x 53 :y 15}
+                                                      :facing-direction (vec2/vec2 1 0)
+                                                      :symbol "@"}
+                                                     (health/add-health-component 100 100))])
                   (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
                   (world/spawn-objects :other [(-> {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}
                                                    (interaction/make-interactable)
@@ -228,6 +233,7 @@
   (combat/handle-combat @*state :fireball)
   (world/get-object (:world @*state) [:fireball 0])
   (world/get-entries-of-type (:world @*state) :fireball)
+  (world/get-player (:world @*state))
   :rcf)
 
 ; I think that a lot of the issues I encountered during this refactor are caused by the fact that I accessed data directly instead of putting it behind abstractions - for example, by using get-in to get the data from the grid, instead of a grid/world abstraction, that would help me notice that I'm accessing the wrong thing, or would make it so I don't have the "wrong thing" to access in the first place

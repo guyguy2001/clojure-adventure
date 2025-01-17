@@ -3,7 +3,8 @@
             [lanterna.constants]
             [clojure-adventure.vec2 :as vec2]
             [clojure-adventure.grid :as grid]
-            [clojure-adventure.world :as world]))
+            [clojure-adventure.world :as world]
+            [clojure-adventure.content.health :as health]))
 
 ; TODO: Are these inclusive?
 (defprotocol Boundaries
@@ -108,7 +109,8 @@
 
 (defn draw-bottom-pane
   [screen state]
-  (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 0.5))
+  (let [player (world/get-player (:world state))]
+    (s/put-string screen 10 (+ 2 (bottom grid-rect)) (render-health-bar 30 (health/hp-ratio player))))
   (when-let [item (world/get-object (:world state) (:interaction-focus state))]
     (let [item-name (or (:name item) (format "Unnamed %s" (:id item)))]
       (draw-interaaction-prompt screen "X" item-name))))

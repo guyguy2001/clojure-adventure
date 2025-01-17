@@ -1,6 +1,7 @@
 (ns clojure-adventure.content.combat
   (:require
    [clojure-adventure.actions :as actions]
+   [clojure-adventure.content.health :as health]
    [clojure-adventure.engine.collision :as collision]
    [clojure-adventure.movement :as movement]
    [clojure-adventure.world :as world]))
@@ -35,14 +36,27 @@
   [[category id :as entity-id]]
   (= category :fireball))
 
+; TODO: Right now if I shoot a bullet and on the next turn move to it, I step on it and take damage.
+; The solution might not even need to be a move ordering thing, maybe it's just "ignore me if I'm the caster" (probably that one!!!)
+(defn try-hit-enemy
+  [state enemy-id]
+  ; IDEA: This really shows that I should only work with entity ids in public APIs (e.g. the health exported functions)
+  (if (health/has-health-component (world/get-object (:world state) enemy-id))
+    (update state :world
+            world/update-object enemy-id
+            health/reduce-health 10)
+    state))
+
 ; TODO: I'd much rather have this in a :despawn-on-colllision component
 ; TODO: I'm having a hard time extracting just the fireball. Does this mean that each collision should be a tuple, and not a set? yes I think
 (defn despawn-colliding-projectiles
   [state]
-  (reduce (fn [state [a _b :as _collision]]
+  (reduce (fn [state [a b :as _collision]]
             (if (-is-fireball? a)
               ; TODO: Crashes if it's already despawned (e.g. when colliding with 2 things)
-              (update state :world world/despawn a)
+              (-> state
+                  (update :world world/despawn a)
+                  (try-hit-enemy b))
               state))
           state
           (collision/new-collisions state)))
