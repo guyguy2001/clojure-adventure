@@ -87,7 +87,7 @@
                      (handle-mining :interact)
                      (handle-mining :interact)))
   (ui/draw-screen @*screen new-state)
-  (get-in new-state [:world :objects :other])
+  (get-in new-state [:world :objects :copper])
   (world/get-object-list (:world new-state))
   :rcf)
 
