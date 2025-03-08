@@ -3,6 +3,7 @@
   (:require
    [clojure-adventure.actions :as actions]
    [clojure-adventure.content.combat :as combat]
+   [clojure-adventure.content.layers :as layers]
    [clojure-adventure.content.health :as health]
    [clojure-adventure.engine.collision :as collision]
    [clojure-adventure.grid :as grid]
@@ -164,8 +165,14 @@
                   (world/spawn-objects :players [(-> {:pos {:x 53 :y 15}
                                                       :facing-direction (vec2/vec2 1 0)
                                                       :symbol "@"}
-                                                     (health/add-health-component 100 100))])
-                  (population/spawn-at-random-empty-cells :enemies {:symbol "X"} 5)
+                                                     (health/add-health-component 100 100)
+                                                     (layers/add-collision-component {:layers #{layers/players} :mask #{}})
+                                                     (layers/add-enemy-layers #{layers/enemies}))])
+                  (population/spawn-at-random-empty-cells :enemies
+                                                          (-> {:symbol "X"}
+                                                              (layers/add-collision-component {:layers #{layers/enemies} :mask #{}})
+                                                              (layers/add-enemy-layers #{layers/players}))
+                                                          5)
                   (world/spawn-objects :other [(-> {:pos {:x 51 :y 13} :symbol "?" :name "Spellbook"}
                                                    (interaction/make-interactable)
                                                    (collision/make-solid))])

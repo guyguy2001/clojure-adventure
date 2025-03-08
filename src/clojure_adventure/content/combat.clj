@@ -4,7 +4,8 @@
    [clojure-adventure.content.health :as health]
    [clojure-adventure.engine.collision :as collision]
    [clojure-adventure.movement :as movement]
-   [clojure-adventure.world :as world]))
+   [clojure-adventure.world :as world]
+   [clojure-adventure.content.layers :as layers]))
 
 "Ideas:
  * When I attack, I shoot a fireball that moves over tiles
@@ -16,9 +17,21 @@
   [state caster]
   (update state :world
           #(world/spawn-objects %
-                                :fireball [{:pos (:pos caster)
-                                            :facing-direction (:facing-direction caster)
-                                            :symbol "•"}])))
+                                :fireball [(-> {:pos (:pos caster)
+                                                :facing-direction (:facing-direction caster)
+                                                :symbol "•"}
+                                               (layers/add-collision-component {:layers #{layers/bullets}
+                                                                                :mask (layers/get-enemy-layers caster)}))])))
+
+(comment
+  (require '[clojure-adventure.core :as core])
+  (let [state @core/*state
+        player (world/get-player (:world state))
+        state (fireball-attack state player)]
+    (->> (world/get-entries-of-type (:world state) :fireball)
+         (map (comp layers/collision-mask second))))
+  (world/get-entries-of-type (:world @core/*state) :enemies)
+  :rcf)
 
 
 (defn handle-attacking
